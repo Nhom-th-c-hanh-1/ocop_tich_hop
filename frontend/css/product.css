@@ -1154,3 +1154,6 @@ body {
         height: 135px;
     }
 }
+.product-card { display: block !important; }
+.product-actions { justify-content: center; }
+.product-card h3 { text-align: center; }
