@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quản lý vùng nguyên liệu</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:30px 15px;font-family:Arial,sans-serif;background:#f4f7f4;color:#26352b}
+.container{max-width:1000px;margin:auto;padding:24px;background:#fff;border-radius:12px;box-shadow:0 3px 15px #00000012}
+h2{color:#237a3b;margin-top:0}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+label{display:block;margin-bottom:6px;font-weight:bold}
+input,select,textarea{width:100%;padding:10px;border:1px solid #ccc;border-radius:6px;font-size:15px}
+.full{grid-column:1/-1}
+button,.back{border:0;border-radius:6px;padding:10px 16px;cursor:pointer;font-size:14px;text-decoration:none;color:#fff;background:#237a3b;display:inline-block}
+.back{background:#6c757d}.danger{background:#dc3545}.warn{background:#0d6efd}
+table{width:100%;border-collapse:collapse;margin-top:24px}
+th,td{border:1px solid #ddd;padding:9px;text-align:center}
+th{background:#d9f7c5}
+.wrap{overflow-x:auto}
+#message{margin-top:12px}
+@media(max-width:600px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>Quản lý vùng nguyên liệu</h2>
+  <a class="back" href="products.html">← Quay lại sản phẩm</a>
+
+  <form id="regionForm" style="margin-top:18px">
+    <h3 id="formTitle">Thêm vùng mới</h3>
+    <input type="hidden" id="MaVung">
+    <div class="grid">
+      <div><label>Cơ sở sản xuất *</label>
+        <select id="MaCoSo" required><option value="">-- Chọn cơ sở --</option></select></div>
+      <div><label>Tên vùng *</label><input id="TenVung" required></div>
+      <div><label>Địa chỉ *</label><input id="DiaChi" required></div>
+      <div><label>Diện tích</label><input id="DienTich" type="number" step="0.01" min="0"></div>
+      <div><label>Đơn vị diện tích</label><input id="DonViDienTich" value="ha"></div>
+      <div><label>Trạng thái</label>
+        <select id="TrangThai">
+          <option value="hoat_dong">Hoạt động</option>
+          <option value="tam_ngung">Tạm ngừng</option>
+        </select></div>
+      <div class="full"><label>Mô tả</label><textarea id="MoTa" rows="3"></textarea></div>
+    </div>
+    <div style="margin-top:16px;display:flex;gap:10px">
+      <button type="submit" id="saveBtn">Lưu vùng</button>
+      <button type="button" class="back" id="cancelBtn" style="display:none">Hủy sửa</button>
+    </div>
+  </form>
+  <p id="message"></p>
+
+  <div class="wrap">
+    <table>
+      <thead><tr><th>Tên vùng</th><th>Địa chỉ</th><th>Diện tích</th><th>Cơ sở</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+      <tbody id="tbody"><tr><td colspan="6">Đang tải...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const API = window.location.origin + '/api';
+const token = localStorage.getItem('ocopToken');
+if (!token) { alert('Bạn cần đăng nhập trước.'); location.href = 'login.html'; }
+
+const $ = id => document.getElementById(id);
+const msg = $('message');
+let regions = [], coSoList = [];
+
+function esc(v){return String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);}
+function show(text, ok){msg.style.color = ok ? 'green' : 'red'; msg.textContent = text;}
+
+async function api(path, options = {}) {
+  const res = await fetch(API + path, {
+    ...options,
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, ...(options.headers || {}) }
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || 'Lỗi HTTP ' + res.status);
+  return data;
+}
+const toList = r => Array.isArray(r) ? r : (r.data || []);
+
+async function loadCoSo() {
+  try {
+    coSoList = toList(await api('/co-so'));
+    $('MaCoSo').innerHTML = '<option value="">-- Chọn cơ sở --</option>' +
+      coSoList.map(c => `<option value="${esc(c.MaCoSo)}">${esc(c.TenCoSo)}</option>`).join('');
+  } catch (e) { show('Không tải được danh sách cơ sở: ' + e.message, false); }
+}
+
+async function loadRegions() {
+  try {
+    regions = toList(await api('/vung-nguyen-lieu'));
+    if (!regions.length) { $('tbody').innerHTML = '<tr><td colspan="6">Chưa có vùng nguyên liệu.</td></tr>'; return; }
+    $('tbody').innerHTML = regions.map(r => {
+      const cs = coSoList.find(c => Number(c.MaCoSo) === Number(r.MaCoSo));
+      return `<tr>
+        <td>${esc(r.TenVung)}</td><td>${esc(r.DiaChi)}</td>
+        <td>${esc(r.DienTich ?? '')} ${esc(r.DonViDienTich)}</td>
+        <td>${esc(cs ? cs.TenCoSo : r.MaCoSo)}</td>
+        <td>${r.TrangThai === 'hoat_dong' ? 'Hoạt động' : 'Tạm ngừng'}</td>
+        <td><button class="warn" onclick="editRegion(${Number(r.MaVung)})">Sửa</button>
+            <button class="danger" onclick="deleteRegion(${Number(r.MaVung)})">Xóa</button></td>
+      </tr>`;
+    }).join('');
+  } catch (e) { $('tbody').innerHTML = `<tr><td colspan="6">${esc(e.message)}</td></tr>`; }
+}
+
+function resetForm() {
+  $('regionForm').reset();
+  $('MaVung').value = '';
+  $('DonViDienTich').value = 'ha';
+  $('formTitle').textContent = 'Thêm vùng mới';
+  $('cancelBtn').style.display = 'none';
+}
+
+function editRegion(id) {
+  const r = regions.find(x => Number(x.MaVung) === Number(id));
+  if (!r) return;
+  $('MaVung').value = r.MaVung;
+  $('MaCoSo').value = r.MaCoSo;
+  $('TenVung').value = r.TenVung || '';
+  $('DiaChi').value = r.DiaChi || '';
+  $('DienTich').value = r.DienTich ?? '';
+  $('DonViDienTich').value = r.DonViDienTich || 'ha';
+  $('TrangThai').value = r.TrangThai || 'hoat_dong';
+  $('MoTa').value = r.MoTa || '';
+  $('formTitle').textContent = 'Sửa vùng: ' + r.TenVung;
+  $('cancelBtn').style.display = 'inline-block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function deleteRegion(id) {
+  if (!confirm('Bạn có chắc muốn xóa vùng này?')) return;
+  try {
+    const d = await api('/vung-nguyen-lieu/' + id, { method: 'DELETE' });
+    show(d.message || 'Đã xóa.', true);
+    await loadRegions();
+  } catch (e) { show(e.message, false); }
+}
+
+$('cancelBtn').addEventListener('click', resetForm);
+
+$('regionForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const id = $('MaVung').value;
+  const body = {
+    MaCoSo: Number($('MaCoSo').value),
+    TenVung: $('TenVung').value.trim(),
+    DiaChi: $('DiaChi').value.trim(),
+    DienTich: $('DienTich').value || null,
+    DonViDienTich: $('DonViDienTich').value.trim() || 'ha',
+    MoTa: $('MoTa').value.trim() || null,
+    TrangThai: $('TrangThai').value
+  };
+  try {
+    const d = await api(id ? '/vung-nguyen-lieu/' + id : '/vung-nguyen-lieu',
+      { method: id ? 'PUT' : 'POST', body: JSON.stringify(body) });
+    show(d.message || 'Đã lưu.', true);
+    resetForm();
+    await loadRegions();
+  } catch (err) { show(err.message, false); }
+});
+
+(async () => { await loadCoSo(); await loadRegions(); })();
+</script>
+</body>
+</html>
