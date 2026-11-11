@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quản lý lô sản xuất</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:30px 15px;font-family:Arial,sans-serif;background:#f4f7f4;color:#26352b}
+.container{max-width:1100px;margin:auto;padding:24px;background:#fff;border-radius:12px;box-shadow:0 3px 15px #00000012}
+h2{color:#237a3b;margin-top:0}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+label{display:block;margin-bottom:6px;font-weight:bold}
+input,select{width:100%;padding:10px;border:1px solid #ccc;border-radius:6px;font-size:15px}
+button,.back{border:0;border-radius:6px;padding:8px 14px;cursor:pointer;font-size:14px;text-decoration:none;color:#fff;background:#237a3b;display:inline-block}
+.back{background:#6c757d}.danger{background:#dc3545}.warn{background:#0d6efd}.qr{background:#8a5a00}
+table{width:100%;border-collapse:collapse;margin-top:24px;min-width:800px}
+th,td{border:1px solid #ddd;padding:9px;text-align:center}
+th{background:#d9f7c5}
+.wrap{overflow-x:auto}
+#message{margin-top:12px}
+#qrResult{text-align:center;margin-top:20px}
+#qrResult img{width:200px;max-width:100%}
+@media(max-width:600px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>Quản lý lô sản xuất</h2>
+  <a class="back" href="products.html">← Quay lại sản phẩm</a>
+
+  <form id="lotForm" style="margin-top:18px">
+    <h3 id="formTitle">Thêm lô mới</h3>
+    <input type="hidden" id="MaLo">
+    <div class="grid">
+      <div><label>Sản phẩm *</label><select id="MaSanPham" required></select></div>
+      <div><label>Vùng nguyên liệu *</label><select id="MaVung" required></select></div>
+      <div><label>Mã số lô *</label><input id="MaSoLo" placeholder="LO-OCOP001-2026-002" required></div>
+      <div><label>Trạng thái</label>
+        <select id="TrangThai">
+          <option value="dang_san_xuat">Đang sản xuất</option>
+          <option value="hoan_thanh">Hoàn thành</option>
+          <option value="tam_dung">Tạm dừng</option>
+          <option value="thu_hoi">Thu hồi</option>
+        </select></div>
+      <div><label>Số lượng *</label><input id="SoLuong" type="number" min="0.01" step="0.01" required></div>
+      <div><label>Đơn vị tính *</label><input id="DonViTinh" placeholder="kg, lit, hộp..." required></div>
+      <div><label>Ngày thu hoạch</label><input id="NgayThuHoach" type="date"></div>
+      <div><label>Ngày sản xuất *</label><input id="NgaySanXuat" type="date" required></div>
+      <div><label>Hạn sử dụng</label><input id="HanSuDung" type="date"></div>
+    </div>
+    <div style="margin-top:16px;display:flex;gap:10px">
+      <button type="submit">Lưu lô</button>
+      <button type="button" class="back" id="cancelBtn" style="display:none">Hủy sửa</button>
+    </div>
+  </form>
+  <p id="message"></p>
+
+  <div class="wrap">
+    <table>
+      <thead><tr><th>Mã lô</th><th>Sản phẩm</th><th>Vùng</th><th>Số lượng</th><th>Ngày SX</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+      <tbody id="tbody"><tr><td colspan="7">Đang tải...</td></tr></tbody>
+    </table>
+  </div>
+  <div id="qrResult"></div>
+</div>
+
+<script>
+const API = window.location.origin + '/api';
+const token = localStorage.getItem('ocopToken');
+if (!token) { alert('Bạn cần đăng nhập trước.'); location.href = 'login.html'; }
+
+const $ = id => document.getElementById(id);
+const msg = $('message');
+let lots = [];
+const STATUS = {dang_san_xuat:'Đang sản xuất',hoan_thanh:'Hoàn thành',tam_dung:'Tạm dừng',thu_hoi:'Thu hồi'};
+const FIELDS = ['MaSanPham','MaVung','MaSoLo','NgayThuHoach','NgaySanXuat','HanSuDung','SoLuong','DonViTinh','TrangThai'];
+
+function esc(v){return String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);}
+function show(t, ok){msg.style.color = ok ? 'green' : 'red'; msg.textContent = t;}
+const d10 = v => v ? String(v).slice(0,10) : '';
+const toList = r => Array.isArray(r) ? r : (r.data || []);
+
+async function api(path, options = {}) {
+  const res = await fetch(API + path, {
+    ...options,
+    headers: {'Content-Type':'application/json','Authorization':'Bearer ' + token, ...(options.headers||{})}
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || 'Lỗi HTTP ' + res.status);
+  return data;
+}
+
+async function loadOptions() {
+  const [products, regions] = await Promise.all([api('/products'), api('/vung-nguyen-lieu')]);
+  $('MaSanPham').innerHTML = '<option value="">-- Chọn sản phẩm --</option>' +
+    toList(products).map(p => `<option value="${p.MaSanPham}">${esc(p.TenSanPham)} (${esc(p.MaSanPhamOCOP || 'chưa có mã')})</option>`).join('');
+  $('MaVung').innerHTML = '<option value="">-- Chọn vùng --</option>' +
+    toList(regions).map(r => `<option value="${r.MaVung}">${esc(r.TenVung)} - ${esc(r.DiaChi)}</option>`).join('');
+}
+
+async function loadLots() {
+  try {
+    lots = toList(await api('/lo-san-xuat'));
+    if (!lots.length) { $('tbody').innerHTML = '<tr><td colspan="7">Chưa có lô sản xuất.</td></tr>'; return; }
+    $('tbody').innerHTML = lots.map(l => `<tr>
+      <td>${esc(l.MaSoLo)}</td><td>${esc(l.TenSanPham)}</td><td>${esc(l.TenVung)}</td>
+      <td>${esc(l.SoLuong)} ${esc(l.DonViTinh)}</td><td>${esc(d10(l.NgaySanXuat))}</td>
+      <td>${esc(STATUS[l.TrangThai] || l.TrangThai)}</td>
+      <td>
+        <button class="warn" onclick="editLot(${l.MaLo})">Sửa</button>
+        <button class="danger" onclick="deleteLot(${l.MaLo})">Xóa</button>
+        <button class="qr" onclick="makeQR(${l.MaLo})">QR</button>
+        <a class="back" href="lot-process.html?id=${l.MaLo}">Nhật ký</a>
+      </td></tr>`).join('');
+  } catch (e) { $('tbody').innerHTML = `<tr><td colspan="7">${esc(e.message)}</td></tr>`; }
+}
+
+function resetForm() {
+  $('lotForm').reset(); $('MaLo').value = '';
+  $('formTitle').textContent = 'Thêm lô mới';
+  $('cancelBtn').style.display = 'none';
+}
+
+function editLot(id) {
+  const l = lots.find(x => Number(x.MaLo) === Number(id));
+  if (!l) return;
+  $('MaLo').value = l.MaLo;
+  FIELDS.forEach(f => {
+    $(f).value = ['NgayThuHoach','NgaySanXuat','HanSuDung'].includes(f) ? d10(l[f]) : (l[f] ?? '');
+  });
+  $('formTitle').textContent = 'Sửa lô: ' + l.MaSoLo;
+  $('cancelBtn').style.display = 'inline-block';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+async function deleteLot(id) {
+  if (!confirm('Xóa lô này?')) return;
+  try { show((await api('/lo-san-xuat/' + id, {method:'DELETE'})).message, true); await loadLots(); }
+  catch (e) { show(e.message, false); }
+}
+
+async function makeQR(id) {
+  try {
+    const r = await api('/lo-san-xuat/' + id + '/qr', {method:'POST'});
+    const url = new URL(String(r.HinhAnhQR).replace(/^\/+/, ''), location.origin + '/').href;
+    $('qrResult').innerHTML = `<h3>Mã QR</h3><img src="${esc(url)}" alt="QR"><p>${esc(r.NoiDungQR)}</p>
+      <a href="${esc(url)}" download="qr-lo-${id}.png">Tải ảnh QR</a>`;
+    $('qrResult').scrollIntoView({behavior:'smooth', block:'center'});
+  } catch (e) { show(e.message, false); }
+}
+
+$('cancelBtn').addEventListener('click', resetForm);
+
+$('lotForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const id = $('MaLo').value;
+  const body = {
+    MaSanPham: Number($('MaSanPham').value),
+    MaVung: Number($('MaVung').value),
+    MaSoLo: $('MaSoLo').value.trim(),
+    NgayThuHoach: $('NgayThuHoach').value || null,
+    NgaySanXuat: $('NgaySanXuat').value,
+    HanSuDung: $('HanSuDung').value || null,
+    SoLuong: Number($('SoLuong').value),
+    DonViTinh: $('DonViTinh').value.trim(),
+    TrangThai: $('TrangThai').value
+  };
+  try {
+    const r = await api(id ? '/lo-san-xuat/' + id : '/lo-san-xuat',
+      {method: id ? 'PUT' : 'POST', body: JSON.stringify(body)});
+    show(r.message, true); resetForm(); await loadLots();
+  } catch (err) { show(err.message, false); }
+});
+
+(async () => {
+  try { await loadOptions(); } catch (e) { show(e.message, false); }
+  await loadLots();
+})();
+</script>
+</body>
+</html>
