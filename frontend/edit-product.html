@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sửa sản phẩm OCOP</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 30px 15px; font-family: Arial, sans-serif; background: #f4f7f4; color: #26352b; }
+        .container { max-width: 750px; margin: auto; padding: 28px; background: white; border-radius: 12px; box-shadow: 0 3px 15px #00000012; }
+        h2 { color: #237a3b; margin-top: 0; }
+        label { display: block; margin-top: 15px; margin-bottom: 6px; font-weight: bold; }
+        input, textarea, select { width: 100%; padding: 11px; border: 1px solid #ccc; border-radius: 6px; font-size: 15px; }
+        textarea { min-height: 85px; resize: vertical; }
+        .actions { display: flex; gap: 10px; margin-top: 22px; }
+        button, .back { border: 0; border-radius: 6px; padding: 12px 18px; cursor: pointer; font-size: 15px; text-decoration: none; }
+        .save { background: #237a3b; color: white; }
+        .back { background: #e5e9e5; color: #26352b; }
+        #message { margin-top: 15px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Sửa sản phẩm OCOP</h2>
+    <p>Chỉnh sửa thông tin sản phẩm rồi bấm lưu.</p>
+
+    <form id="productForm">
+        <label for="TenSanPham">Tên sản phẩm *</label>
+        <input id="TenSanPham" required>
+
+        <label for="MaSanPhamOCOP">Mã sản phẩm OCOP</label>
+        <input id="MaSanPhamOCOP">
+
+        <label for="NhomSanPham">Nhóm sản phẩm</label>
+        <input id="NhomSanPham">
+
+        <label for="SoSaoOCOP">Số sao OCOP</label>
+        <select id="SoSaoOCOP">
+            <option value="">Chưa xếp hạng</option>
+            <option value="3">3 sao</option>
+            <option value="4">4 sao</option>
+            <option value="5">5 sao</option>
+        </select>
+
+        <label for="MoTa">Mô tả</label>
+        <textarea id="MoTa"></textarea>
+
+        <label for="ThanhPhan">Thành phần</label>
+        <textarea id="ThanhPhan"></textarea>
+
+        <label for="HuongDanSuDung">Hướng dẫn sử dụng</label>
+        <textarea id="HuongDanSuDung"></textarea>
+
+        <label for="BaoQuan">Bảo quản</label>
+        <textarea id="BaoQuan"></textarea>
+
+        <label for="HinhAnh">Đường dẫn hình ảnh</label>
+        <input id="HinhAnh" placeholder="images/ten-anh.jpg hoặc https://...">
+
+        <div class="actions">
+            <button class="save" type="submit">Lưu thay đổi</button>
+            <a class="back" href="products.html">Quay lại</a>
+        </div>
+    </form>
+
+    <p id="message"></p>
+</div>
+
+<script>
+const API_URL = window.location.origin + '/api/products';
+const token = localStorage.getItem('ocopToken');
+const id = new URLSearchParams(location.search).get('id');
+const message = document.getElementById('message');
+const fields = ['TenSanPham', 'MaSanPhamOCOP', 'NhomSanPham', 'SoSaoOCOP',
+                'MoTa', 'ThanhPhan', 'HuongDanSuDung', 'BaoQuan', 'HinhAnh'];
+
+if (!token) {
+    alert('Bạn cần đăng nhập trước.');
+    location.href = 'login.html';
+}
+if (!id) {
+    alert('Thiếu mã sản phẩm.');
+    location.href = 'products.html';
+}
+
+// Tải dữ liệu cũ vào form
+(async () => {
+    try {
+        const res = await fetch(API_URL, {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const result = await res.json();
+        const list = Array.isArray(result) ? result : (result.data || []);
+        const p = list.find(x => Number(x.MaSanPham) === Number(id));
+        if (!p) throw new Error('Không tìm thấy sản phẩm.');
+
+        fields.forEach(f => {
+            if (p[f] !== null && p[f] !== undefined) {
+                document.getElementById(f).value = p[f];
+            }
+        });
+    } catch (e) {
+        message.style.color = 'red';
+        message.textContent = e.message;
+    }
+})();
+
+// Gửi cập nhật
+document.getElementById('productForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const body = {};
+    fields.forEach(f => {
+        const v = document.getElementById(f).value.trim();
+        body[f] = v === '' ? null : v;
+    });
+
+    message.style.color = '#333';
+    message.textContent = 'Đang lưu...';
+
+    try {
+        const res = await fetch(API_URL + '/' + encodeURIComponent(id), {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify(body)
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.message || data.error || 'Không thể cập nhật.');
+
+        message.style.color = 'green';
+        message.textContent = 'Cập nhật thành công!';
+        setTimeout(() => location.href = 'products.html', 1000);
+    } catch (err) {
+        message.style.color = 'red';
+        message.textContent = err.message;
+    }
+});
+</script>
+</body>
+</html>
