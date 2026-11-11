@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nhật ký sản xuất</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 0; padding: 24px; background: #f5f7f5; color: #1f2d1f; }
+  .box { max-width: 980px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+  h1 { margin-top: 0; font-size: 22px; }
+  label { display: block; font-size: 13px; margin: 10px 0 4px; font-weight: 600; }
+  input, select, textarea { width: 100%; padding: 8px; border: 1px solid #bcc8bc; border-radius: 6px; box-sizing: border-box; font: inherit; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  button { padding: 8px 14px; border: 0; border-radius: 6px; cursor: pointer; background: #2e7d32; color: #fff; font: inherit; }
+  button.gray { background: #78837a; }
+  button.red { background: #c62828; }
+  table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 14px; }
+  th, td { border-bottom: 1px solid #e1e8e1; padding: 8px; text-align: left; vertical-align: top; }
+  .msg { margin: 10px 0; font-size: 14px; }
+  .err { color: #c62828; } .ok { color: #2e7d32; }
+  .scroll { overflow-x: auto; }
+  @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>Nhật ký sản xuất theo lô</h1>
+
+  <label for="lo">Chọn lô sản xuất</label>
+  <select id="lo"></select>
+
+  <div class="msg" id="msg"></div>
+
+  <form id="form">
+    <input type="hidden" id="id">
+    <div class="grid">
+      <div><label>Giai đoạn *</label>
+        <input id="ten" required list="goiY" placeholder="Bón phân, phun thuốc, thu hoạch, đóng gói...">
+        <datalist id="goiY"><option>Chuẩn bị đất</option><option>Gieo trồng</option><option>Bón phân</option><option>Phun thuốc</option><option>Thu hoạch</option><option>Sơ chế</option><option>Đóng gói</option></datalist>
+      </div>
+      <div><label>Địa điểm</label><input id="diaDiem"></div>
+      <div><label>Ngày bắt đầu</label><input type="date" id="bd"></div>
+      <div><label>Ngày kết thúc</label><input type="date" id="kt"></div>
+    </div>
+    <label>Mô tả</label><textarea id="moTa" rows="3"></textarea>
+    <label>Đường dẫn hình ảnh</label><input id="hinh" placeholder="uploads/...">
+    <p><button type="submit" id="luu">Thêm giai đoạn</button>
+       <button type="button" class="gray" id="huy" hidden>Hủy sửa</button></p>
+  </form>
+
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Giai đoạn</th><th>Bắt đầu</th><th>Kết thúc</th><th>Địa điểm</th><th>Mô tả</th><th></th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+// Giả định token lưu trong localStorage với khóa "token". Nếu dự án dùng khóa khác, sửa dòng này.
+const getToken = () => localStorage.getItem("ocopToken");
+let stages = [];
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const day = v => (v ? String(v).slice(0, 10) : "");
+
+function show(text, ok) {
+  $("msg").className = "msg " + (ok ? "ok" : "err");
+  $("msg").textContent = text;
+}
+
+async function api(url, method = "GET", body) {
+  const res = await fetch(url, {
+    method,
+    headers: { "Content-Type": "application/json", Authorization: "Bearer " + getToken() },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401) { location.href = "login.html"; throw new Error("Hết phiên đăng nhập"); }
+  if (!res.ok) throw new Error(data.message || "Có lỗi xảy ra");
+  return data;
+}
+
+async function loadLots() {
+  const lots = await api("/api/lo-san-xuat");
+  $("lo").innerHTML = lots.length
+    ? lots.map(l => `<option value="${l.MaLo}">${esc(l.MaSoLo)} - ${esc(l.TenSanPham || "")}</option>`).join("")
+    : '<option value="">Chưa có lô nào</option>';
+  if (lots.length) loadStages();
+}
+
+async function loadStages() {
+  if (!$("lo").value) return;
+  stages = await api("/api/lich-su-san-xuat/lo/" + $("lo").value);
+  $("rows").innerHTML = stages.map(s => `
+    <tr>
+      <td>${esc(s.TenGiaiDoan)}</td><td>${day(s.NgayBatDau)}</td><td>${day(s.NgayKetThuc)}</td>
+      <td>${esc(s.DiaDiem)}</td><td>${esc(s.MoTa)}</td>
+      <td><button data-sua="${s.MaQuaTrinh}">Sửa</button>
+          <button class="red" data-xoa="${s.MaQuaTrinh}">Xóa</button></td>
+    </tr>`).join("") || '<tr><td colspan="6">Lô này chưa có giai đoạn nào.</td></tr>';
+}
+
+function resetForm() {
+  $("form").reset(); $("id").value = "";
+  $("luu").textContent = "Thêm giai đoạn"; $("huy").hidden = true;
+}
+
+$("lo").addEventListener("change", () => { resetForm(); loadStages().catch(e => show(e.message)); });
+$("huy").addEventListener("click", resetForm);
+
+$("rows").addEventListener("click", async e => {
+  const sua = e.target.dataset.sua, xoa = e.target.dataset.xoa;
+  try {
+    if (sua) {
+      const s = stages.find(x => x.MaQuaTrinh == sua);
+      $("id").value = s.MaQuaTrinh; $("ten").value = s.TenGiaiDoan || "";
+      $("diaDiem").value = s.DiaDiem || ""; $("bd").value = day(s.NgayBatDau);
+      $("kt").value = day(s.NgayKetThuc); $("moTa").value = s.MoTa || ""; $("hinh").value = s.HinhAnh || "";
+      $("luu").textContent = "Lưu thay đổi"; $("huy").hidden = false;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else if (xoa && confirm("Xóa giai đoạn này?")) {
+      show((await api("/api/lich-su-san-xuat/" + xoa, "DELETE")).message, true);
+      loadStages();
+    }
+  } catch (err) { show(err.message); }
+});
+
+$("form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const body = {
+    MaLo: Number($("lo").value), TenGiaiDoan: $("ten").value, DiaDiem: $("diaDiem").value,
+    NgayBatDau: $("bd").value, NgayKetThuc: $("kt").value, MoTa: $("moTa").value, HinhAnh: $("hinh").value
+  };
+  try {
+    const id = $("id").value;
+    const r = id ? await api("/api/lich-su-san-xuat/" + id, "PUT", body)
+                 : await api("/api/lich-su-san-xuat", "POST", body);
+    show(r.message, true); resetForm(); loadStages();
+  } catch (err) { show(err.message); }
+});
+
+if (!getToken()) location.href = "login.html"; else loadLots().catch(e => show(e.message));
+</script>
+</body>
+</html>
