@@ -1,0 +1,54 @@
+const db = require('../config/db');
+
+function normalizeRole(role) {
+    return String(role || '').trim().toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd').replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '');
+}
+
+// Admin: không bị giới hạn. Cơ sở sản xuất: chỉ thao tác dữ liệu của cơ sở mình.
+async function getScope(req) {
+    if (normalizeRole(req.user?.role) !== 'co_so_san_xuat') {
+        return { restricted: false, maCoSo: null };
+    }
+    const [rows] = await db.query(
+        'SELECT MaCoSo FROM nguoi_dung WHERE MaNguoiDung = ?',
+        [req.user.id]
+    );
+    return { restricted: true, maCoSo: rows[0]?.MaCoSo || null };
+}
+
+async function canAccessRegion(scope, maVung) {
+    if (!scope.restricted) return true;
+    if (!scope.maCoSo) return false;
+    const [r] = await db.query(
+        'SELECT 1 FROM vung_nguyen_lieu WHERE MaVung = ? AND MaCoSo = ?',
+        [maVung, scope.maCoSo]
+    );
+    return r.length > 0;
+}
+
+async function canAccessProduct(scope, maSanPham) {
+    if (!scope.restricted) return true;
+    if (!scope.maCoSo) return false;
+    const [r] = await db.query(
+        'SELECT 1 FROM san_pham_ocop WHERE MaSanPham = ? AND MaCoSo = ?',
+        [maSanPham, scope.maCoSo]
+    );
+    return r.length > 0;
+}
+
+async function canAccessLot(scope, maLo) {
+    if (!scope.restricted) return true;
+    if (!scope.maCoSo) return false;
+    const [r] = await db.query(
+        `SELECT 1 FROM lo_san_xuat l
+         JOIN san_pham_ocop p ON p.MaSanPham = l.MaSanPham
+         WHERE l.MaLo = ? AND p.MaCoSo = ?`,
+        [maLo, scope.maCoSo]
+    );
+    return r.length > 0;
+}
+
+module.exports = { getScope, canAccessRegion, canAccessProduct, canAccessLot };
