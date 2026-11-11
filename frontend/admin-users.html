@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản lý tài khoản - OCOP</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    main{max-width:1100px;margin:32px auto;padding:20px}.panel{background:#fff;border-radius:14px;padding:22px;margin:18px 0;box-shadow:0 4px 20px #0001}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}.field label{display:block;font-weight:700;margin:8px 0}.field input,.field select{box-sizing:border-box;width:100%;padding:10px;border:1px solid #bbb;border-radius:7px;font:inherit}.primary{background:#237a42;color:white;border:0;border-radius:7px;padding:11px 16px;cursor:pointer;margin-top:16px}.message{line-height:1.5;white-space:pre-wrap}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:760px}th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left}th{background:#eef5ef}.small-btn{padding:6px 10px;cursor:pointer;border:1px solid #bbb;border-radius:6px;background:#fff}.muted{color:#555;font-size:.93rem}.hidden{display:none}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo"><div class="logo-icon">🌿</div><div class="logo-text">OC<br>OP</div></div>
+    <nav><a href="index.html">TRANG CHỦ</a><a href="products.html">SẢN PHẨM</a><a href="trace-product.html">TRA CỨU</a><a href="login.html">TÀI KHOẢN</a></nav>
+  </header>
+  <main>
+    <h1>Quản lý tài khoản OCOP</h1>
+    <p class="muted">Chỉ quản trị viên đã đăng nhập mới được xem trang này và thao tác với tài khoản.</p>
+    <section class="panel">
+      <h2>Tạo tài khoản thành viên</h2>
+      <form id="createUserForm">
+        <div class="grid">
+          <div class="field"><label for="fullName">Họ và tên *</label><input id="fullName" required maxlength="100"></div>
+          <div class="field"><label for="username">Tên đăng nhập *</label><input id="username" required minlength="4" maxlength="100" pattern="[A-Za-z0-9_.-]+"></div>
+          <div class="field"><label for="password">Mật khẩu tạm *</label><input id="password" type="password" required minlength="8" autocomplete="new-password"></div>
+          <div class="field"><label for="email">Email</label><input id="email" type="email"></div>
+          <div class="field"><label for="phone">Số điện thoại</label><input id="phone"></div>
+          <div class="field"><label for="role">Vai trò *</label><select id="role" required></select></div>
+          <div class="field hidden" id="facilityField"><label for="facilityId">Mã cơ sở sản xuất *</label><input id="facilityId" type="number" min="1"></div>
+        </div>
+        <button class="primary" type="submit" id="createButton">Tạo tài khoản</button>
+      </form>
+      <p id="formMessage" class="message" role="status" aria-live="polite"></p>
+    </section>
+    <section class="panel">
+      <h2>Danh sách tài khoản</h2>
+      <button class="small-btn" id="refreshButton" type="button">Tải lại danh sách</button>
+      <p id="listMessage" class="message" role="status" aria-live="polite"></p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Mã</th><th>Họ tên</th><th>Tên đăng nhập</th><th>Vai trò</th><th>Email</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+        <tbody id="usersBody"><tr><td colspan="7">Đang tải...</td></tr></tbody>
+      </table></div>
+    </section>
+  </main>
+  <script src="js/admin-users.js"></script>
+</body>
+</html>

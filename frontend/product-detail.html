@@ -1,0 +1,418 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết sản phẩm OCOP</title>
+    <link rel="stylesheet" href="css/product.css">
+
+    <style>
+        .detail-state {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .detail-image-box img {
+            max-width: 100%;
+            object-fit: contain;
+        }
+
+        .detail-panel {
+            display: none;
+        }
+
+        .detail-panel.active {
+            display: block;
+        }
+
+        .detail-tab.active {
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+<header class="detail-header">
+    <a href="index.html" class="detail-logo">
+        <span class="detail-logo-icon">🌿</span>
+        <span><b>OC</b><br><b>OP</b></span>
+    </a>
+
+    <nav class="detail-nav">
+        <a href="index.html">TRANG CHỦ</a>
+        <a href="products.html">SẢN PHẨM</a>
+        <a href="trace-result.html">TRA CỨU</a>
+        <a href="scan-qr.html">QUÉT QR</a>
+    </nav>
+</header>
+
+<section class="detail-title">
+    <div>CHI TIẾT SẢN PHẨM:</div>
+    <strong id="detailTitle">Đang tải...</strong>
+</section>
+
+<main class="detail-page">
+    <p id="detailState" class="detail-state">
+        Đang tải thông tin sản phẩm...
+    </p>
+
+    <div id="detailBody" style="display:none;">
+        <section class="detail-main">
+            <div class="detail-image-box">
+                <img id="detailImage" src="" alt="Ảnh sản phẩm">
+            </div>
+
+            <div class="detail-product-info">
+                <h3>THÔNG TIN SẢN PHẨM</h3>
+                <p id="productName"></p>
+                <p id="productOcop"></p>
+                <p>Mã: <span id="productCode"></span></p>
+                <p>Nhà SX: <span id="productProducer"></span></p>
+                <p>Địa chỉ: <span id="productAddress"></span></p>
+                <p>Ngày SX: <span id="productDate"></span></p>
+            </div>
+        </section>
+
+        <section class="material-info">
+            <h3>THÔNG TIN NGUYÊN LIỆU</h3>
+            <p>
+                NGUỒN: <span id="materialSource"></span>
+                | LOẠI: <span id="materialType"></span>
+            </p>
+        </section>
+
+        <section class="detail-buttons">
+            <button type="button" class="detail-tab active"
+                onclick="showDetail('origin', this)">NGUỒN GỐC</button>
+
+            <button type="button" class="detail-tab"
+                onclick="showDetail('process', this)">QUY TRÌNH</button>
+
+            <button type="button" class="detail-tab"
+                onclick="showDetail('certificate', this)">CHỨNG NHẬN</button>
+
+            <button type="button" class="detail-tab"
+                onclick="showDetail('description', this)">MÔ TẢ SẢN PHẨM</button>
+        </section>
+
+        <section class="detail-content">
+            <div id="origin" class="detail-panel active">
+                <h2>THÔNG TIN NGUỒN GỐC</h2>
+                <div class="detail-info-grid">
+                    <div><span>Vùng nguyên liệu</span><strong id="originArea"></strong></div>
+                    <div><span>Mã lô sản xuất</span><strong id="originLot"></strong></div>
+                    <div><span>Cơ sở sản xuất</span><strong id="originFactory"></strong></div>
+                    <div><span>Địa chỉ</span><strong id="originAddress"></strong></div>
+                    <div><span>Ngày thu hoạch</span><strong id="originHarvest"></strong></div>
+                    <div><span>Hạn sử dụng</span><strong id="originExpiry"></strong></div>
+                </div>
+            </div>
+
+            <div id="process" class="detail-panel">
+                <h2>QUY TRÌNH SẢN XUẤT</h2>
+                <div class="process-list" id="processList"></div>
+            </div>
+
+            <div id="certificate" class="detail-panel">
+                <h2>THÔNG TIN CHỨNG NHẬN</h2>
+                <div id="certificateList"></div>
+            </div>
+
+            <div id="description" class="detail-panel">
+                <h2>MÔ TẢ SẢN PHẨM</h2>
+                <p id="productDescription" class="description-text"></p>
+                <div class="detail-info-grid" id="extraInfo"></div>
+            </div>
+        </section>
+    </div>
+
+    <div class="detail-back">
+        <a href="products.html">← QUAY LẠI DANH SÁCH SẢN PHẨM</a>
+    </div>
+</main>
+
+<footer class="detail-footer">
+    <p>© 2026 OCOP TRACEABILITY</p>
+</footer>
+
+<script>
+    const API_BASE = "http://localhost:3000/api/products/";
+    const NO_DATA = "Chưa cập nhật";
+
+    const imageMap = {
+        "cà phê đặc sản": "images/ca-phe.jpg",
+        "cam sành đặc sản": "images/cam-sanh.jpg",
+        "chè xanh tân cương": "images/che-xanh.jpg",
+        "chuối sấy dẻo": "images/chuoi-say.jpg",
+        "gạo st25": "images/gao-st25.jpg",
+        "mật ong bạc hà": "images/mat-ong.jpg"
+    };
+
+    const certStatusText = {
+        con_hieu_luc: "Còn hiệu lực",
+        het_hieu_luc: "Hết hiệu lực",
+        bi_thu_hoi: "Bị thu hồi",
+        cho_duyet: "Chờ duyệt"
+    };
+
+    function setText(id, value) {
+        const element = document.getElementById(id);
+        if (!element) return;
+
+        element.textContent =
+            value === null || value === undefined || value === ""
+                ? NO_DATA
+                : String(value);
+    }
+
+    function formatDate(value) {
+        if (!value) return NO_DATA;
+
+        const date = String(value).slice(0, 10);
+        const parts = date.split("-");
+
+        return parts.length === 3
+            ? `${parts[2]}/${parts[1]}/${parts[0]}`
+            : String(value);
+    }
+
+    function showState(message) {
+        const state = document.getElementById("detailState");
+        state.textContent = message;
+        state.style.display = "block";
+        document.getElementById("detailBody").style.display = "none";
+    }
+
+    function el(tag, text, className) {
+        const node = document.createElement(tag);
+
+        if (text !== undefined && text !== null) {
+            node.textContent = String(text);
+        }
+
+        if (className) node.className = className;
+        return node;
+    }
+
+    function renderProcess(steps) {
+        const list = document.getElementById("processList");
+        list.replaceChildren();
+
+        if (!Array.isArray(steps) || steps.length === 0) {
+            list.appendChild(el("p", "Chưa có dữ liệu quy trình sản xuất."));
+            return;
+        }
+
+        steps.forEach((step, index) => {
+            const item = el("div", undefined, "process-item");
+            item.appendChild(el("span", String(index + 1).padStart(2, "0")));
+
+            const content = document.createElement("div");
+            content.appendChild(el("h3", step.TenGiaiDoan || `Giai đoạn ${index + 1}`));
+            content.appendChild(el("p", step.MoTa || NO_DATA));
+
+            const extra = [];
+            if (step.DiaDiem) extra.push("Địa điểm: " + step.DiaDiem);
+            if (step.NgayBatDau) extra.push("Ngày: " + formatDate(step.NgayBatDau));
+
+            if (extra.length) {
+                content.appendChild(el("p", extra.join(" | ")));
+            }
+
+            item.appendChild(content);
+            list.appendChild(item);
+        });
+    }
+
+    function renderCertificates(certs, product) {
+        const box = document.getElementById("certificateList");
+        box.replaceChildren();
+
+        if (product.SoSaoOCOP) {
+            const level = el("p", "Hạng OCOP: " + product.SoSaoOCOP + " sao");
+            level.style.fontWeight = "bold";
+            box.appendChild(level);
+        }
+
+        if (!Array.isArray(certs) || certs.length === 0) {
+            box.appendChild(el("p", "Chưa có thông tin chứng nhận."));
+            return;
+        }
+
+        certs.forEach(cert => {
+            const wrap = el("div", undefined, "certificate-box");
+            wrap.appendChild(el("div", "★", "certificate-icon"));
+
+            const info = document.createElement("div");
+            info.appendChild(el("h3", cert.TenChungNhan || "Chứng nhận"));
+            info.appendChild(el("p", "Số chứng nhận: " + (cert.SoChungNhan || NO_DATA)));
+            info.appendChild(el("p", "Đơn vị cấp: " + (cert.DonViCap || NO_DATA)));
+            info.appendChild(el(
+                "p",
+                "Hiệu lực: " + formatDate(cert.NgayCap) +
+                " - " + formatDate(cert.NgayHetHan)
+            ));
+            info.appendChild(el(
+                "p",
+                "Tình trạng: " + (certStatusText[cert.TrangThai] || cert.TrangThai || NO_DATA)
+            ));
+
+            if (cert.GhiChu) info.appendChild(el("p", "Ghi chú: " + cert.GhiChu));
+
+            wrap.appendChild(info);
+            box.appendChild(wrap);
+        });
+    }
+
+    function renderExtra(product) {
+        const grid = document.getElementById("extraInfo");
+        grid.replaceChildren();
+
+        [
+            ["Thành phần", product.ThanhPhan],
+            ["Hướng dẫn sử dụng", product.HuongDanSuDung],
+            ["Bảo quản", product.BaoQuan]
+        ].forEach(([label, value]) => {
+            if (!value) return;
+
+            const box = document.createElement("div");
+            box.appendChild(el("span", label));
+            box.appendChild(el("strong", value));
+            grid.appendChild(box);
+        });
+    }
+
+    function renderProduct(product) {
+        if (!product || typeof product !== "object") {
+            throw new Error("Dữ liệu sản phẩm không hợp lệ.");
+        }
+
+        const lot = product.LoSanXuat || null;
+        const imagePath =
+            product.HinhAnh ||
+            imageMap[String(product.TenSanPham || "").trim().toLowerCase()] ||
+            "";
+
+        const image = document.getElementById("detailImage");
+        image.alt = product.TenSanPham || "Ảnh sản phẩm";
+        image.onerror = function () {
+            image.onerror = null;
+            image.removeAttribute("src");
+            image.alt = "Không có ảnh sản phẩm";
+        };
+
+        if (imagePath) {
+            image.src = imagePath;
+        } else {
+            image.removeAttribute("src");
+        }
+
+        document.title = (product.TenSanPham || "Chi tiết sản phẩm") + " | OCOP Traceability";
+        setText("detailTitle", (product.TenSanPham || "CHI TIẾT SẢN PHẨM").toUpperCase());
+
+        setText("productName", product.TenSanPham);
+        setText("productOcop", product.SoSaoOCOP ? "OCOP " + product.SoSaoOCOP + " SAO" : NO_DATA);
+        setText("productCode", product.MaSanPhamOCOP || product.MaSanPham);
+        setText("productProducer", product.TenCoSo);
+        setText("productAddress", product.DiaPhuong);
+        setText("productDate", lot ? formatDate(lot.NgaySanXuat) : NO_DATA);
+
+        setText("materialSource", lot ? lot.TenVung : NO_DATA);
+        setText("materialType", product.NhomSanPham);
+
+        setText("originArea", lot ? [lot.TenVung, lot.DiaChiVung].filter(Boolean).join(" (") + (lot.DiaChiVung ? ")" : "") : NO_DATA);
+        setText("originLot", lot ? lot.MaSoLo : NO_DATA);
+        setText("originFactory", product.TenCoSo);
+        setText("originAddress", product.DiaPhuong);
+        setText("originHarvest", lot ? formatDate(lot.NgayThuHoach) : NO_DATA);
+        setText("originExpiry", lot ? formatDate(lot.HanSuDung) : NO_DATA);
+        setText("productDescription", product.MoTa);
+
+        renderProcess(product.QuaTrinh);
+        renderCertificates(product.ChungNhan, product);
+        renderExtra(product);
+
+        document.getElementById("detailState").style.display = "none";
+        document.getElementById("detailBody").style.display = "block";
+    }
+
+    async function loadProduct() {
+        const id = new URLSearchParams(window.location.search).get("id");
+
+        if (!id || !/^\d+$/.test(id)) {
+            setText("detailTitle", "KHÔNG TÌM THẤY");
+            showState("Không có mã sản phẩm hợp lệ. Hãy chọn sản phẩm từ danh sách.");
+            return;
+        }
+
+        try {
+            // Dùng cùng khóa token với products.html
+            const token = localStorage.getItem("ocopToken");
+
+            const response = await fetch(API_BASE + encodeURIComponent(id), {
+                method: "GET",
+                headers: token
+                    ? { "Authorization": "Bearer " + token }
+                    : {}
+            });
+
+            const rawText = await response.text();
+            let result;
+
+            try {
+                result = rawText ? JSON.parse(rawText) : {};
+            } catch {
+                throw new Error("Backend trả về dữ liệu không hợp lệ. Hãy kiểm tra API chi tiết sản phẩm.");
+            }
+
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    throw new Error("Phiên đăng nhập không hợp lệ hoặc bạn chưa có quyền xem sản phẩm. Hãy đăng nhập lại.");
+                }
+
+                throw new Error(
+                    result.message || result.error || `Lỗi máy chủ HTTP ${response.status}.`
+                );
+            }
+
+            // Hỗ trợ một số dạng phản hồi API phổ biến
+            const product = result.data || result.product || result;
+
+            if (
+                !product ||
+                typeof product !== "object" ||
+                Array.isArray(product) ||
+                !product.MaSanPham
+            ) {
+                console.error("Phản hồi API chi tiết sản phẩm:", result);
+                throw new Error("API chưa trả về đúng dữ liệu sản phẩm. Hãy kiểm tra getProductById trong Backend.");
+            }
+
+            renderProduct(product);
+
+        } catch (error) {
+            console.error("Lỗi tải chi tiết sản phẩm:", error);
+            setText("detailTitle", "KHÔNG TẢI ĐƯỢC SẢN PHẨM");
+            showState(error.message || "Không tải được chi tiết sản phẩm.");
+        }
+    }
+
+    function showDetail(id, button) {
+        document.querySelectorAll(".detail-panel").forEach(panel => {
+            panel.classList.remove("active");
+        });
+
+        document.querySelectorAll(".detail-tab").forEach(btn => {
+            btn.classList.remove("active");
+        });
+
+        const panel = document.getElementById(id);
+        if (panel) panel.classList.add("active");
+        if (button) button.classList.add("active");
+    }
+
+    loadProduct();
+</script>
+</body>
+</html>

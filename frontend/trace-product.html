@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Tra cứu sản phẩm - OCOP</title>
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/trace.css">
+</head>
+
+<body>
+    <header class="trace-header">
+        <div class="trace-logo">
+            <a href="index.html">OCOP</a>
+        </div>
+
+        <nav class="trace-nav">
+            <a href="index.html">TRANG CHỦ</a>
+            <a href="products.html">SẢN PHẨM</a>
+            <a href="trace-product.html" class="active">TRA CỨU</a>
+            <a href="scan-qr.html">QUÉT QR</a>
+        </nav>
+    </header>
+
+    <main class="qr-page">
+        <div class="trace-title">
+            <h1>TRA CỨU SẢN PHẨM</h1>
+            <p>
+                Nhập mã được in trên sản phẩm để kiểm tra
+                thông tin nguồn gốc.
+            </p>
+        </div>
+
+        <section class="qr-section">
+            <div class="manual-trace">
+                <h2>Nhập mã truy xuất</h2>
+
+                <p>
+                    Nhập mã sản phẩm hoặc chọn một mã demo để tra cứu.
+                </p>
+
+                <div class="trace-input-group">
+                    <input
+                        type="text"
+                        id="traceCode"
+                        placeholder="Ví dụ: OCOP001"
+                        autocomplete="off">
+
+                    <button type="button" id="traceButton" class="trace-button">
+                        TRA CỨU
+                    </button>
+                </div>
+
+                <p id="traceError" class="trace-error"></p>
+
+                <div class="demo-code">
+                    <span>Mã demo:</span>
+
+                    <button type="button" class="demo-btn" data-code="OCOP001">
+                        OCOP001
+                    </button>
+
+                    <button type="button" class="demo-btn" data-code="OCOP002">
+                        OCOP002
+                    </button>
+
+                    <button type="button" class="demo-btn" data-code="OCOP003">
+                        OCOP003
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="trace-footer">
+        <p>HỆ THỐNG TRUY XUẤT NGUỒN GỐC NÔNG SẢN OCOP</p>
+        <p>© 2026 OCOP Traceability</p>
+    </footer>
+
+    <script src="js/trace.js"></script>
+</body>
+</html>

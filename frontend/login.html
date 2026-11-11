@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đăng nhập - OCOP</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .login-wrap{max-width:430px;margin:56px auto;padding:28px;background:#fff;border-radius:16px;box-shadow:0 8px 28px #0001}
+    .login-wrap h1{margin-top:0;text-align:center}.login-wrap label{display:block;margin:16px 0 6px;font-weight:700}
+    .login-wrap input{box-sizing:border-box;width:100%;padding:12px;border:1px solid #bbb;border-radius:8px;font:inherit}
+    .login-wrap button{width:100%;margin-top:20px;padding:12px;border:0;border-radius:8px;background:#237a42;color:#fff;font-weight:700;cursor:pointer}
+    #loginMessage{margin-top:14px;line-height:1.5}.back-link{display:block;text-align:center;margin-top:18px}
+    .form-note{font-size:.92rem;color:#555;line-height:1.5}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo"><div class="logo-icon">🌿</div><div class="logo-text">OC<br>OP</div></div>
+    <nav><a href="index.html">TRANG CHỦ</a><a href="products.html">SẢN PHẨM</a><a href="trace-product.html">TRA CỨU</a></nav>
+  </header>
+  <main class="login-wrap">
+    <h1>Đăng nhập hệ thống OCOP</h1>
+    <form id="loginForm">
+      <label for="tenDangNhap">Tên đăng nhập</label>
+      <input id="tenDangNhap" name="tenDangNhap" autocomplete="username" required>
+      <label for="matKhau">Mật khẩu</label>
+      <input id="matKhau" name="matKhau" type="password" autocomplete="current-password" required>
+      <button type="submit" id="loginButton">Đăng nhập</button>
+    </form>
+    <p class="form-note">Người tiêu dùng có thể tự đăng ký tài khoản. Bạn vẫn xem sản phẩm, quét QR và tra cứu nguồn gốc mà không cần đăng nhập.</p>
+    <a class="back-link" href="register.html">Chưa có tài khoản? Đăng ký người tiêu dùng</a>
+    <p id="loginMessage" role="status" aria-live="polite"></p>
+    <a class="back-link" href="index.html">Quay lại trang chủ</a>
+  </main>
+  <script src="js/auth.js"></script>
+</body>
+</html>

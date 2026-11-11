@@ -1,0 +1,933 @@
+/* ==================================================
+   CSS RIÊNG - NGƯỜI 3
+   QR + TRA CỨU + KẾT QUẢ TRUY XUẤT
+================================================== */
+
+
+/* ==================================================
+   HEADER RIÊNG
+================================================== */
+
+.trace-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    height: 80px;
+    box-sizing: border-box;
+    padding: 0 8%;
+
+    background: #d9f7c5;
+
+    border-bottom: 1px solid #c5e8b3;
+}
+
+
+.trace-logo a {
+    text-decoration: none;
+
+    font-size: 28px;
+
+    font-weight: bold;
+
+    color: #087f5b;
+}
+
+
+.trace-nav {
+    display: flex;
+
+    gap: 25px;
+}
+
+
+.trace-nav a {
+    text-decoration: none;
+
+    color: #333333;
+
+    font-weight: 600;
+
+    transition: 0.2s;
+}
+
+
+.trace-nav a:hover,
+.trace-nav a.active {
+    color: #087f5b;
+}
+
+
+/* ==================================================
+   TIÊU ĐỀ
+================================================== */
+
+.trace-title {
+    text-align: center;
+
+    margin-bottom: 35px;
+}
+
+
+.trace-title h1 {
+    margin-bottom: 10px;
+
+    color: #087f5b;
+
+    font-size: 30px;
+}
+
+
+.trace-title p {
+    color: #666666;
+
+    line-height: 1.6;
+}
+
+
+/* ==================================================
+   TRANG QR
+================================================== */
+
+.qr-page {
+    width: 90%;
+
+    max-width: 1100px;
+
+    margin: 50px auto;
+
+    min-height: 600px;
+}
+
+
+.qr-section {
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 35px;
+
+    align-items: start;
+}
+
+
+/* ==================================================
+   CAMERA
+================================================== */
+
+.qr-camera {
+    padding: 25px;
+
+    border: 1px solid #dddddd;
+
+    border-radius: 15px;
+
+    background: #ffffff;
+
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+
+    text-align: center;
+}
+
+
+.camera-frame {
+    position: relative;
+
+    width: 100%;
+
+    height: 330px;
+
+    overflow: hidden;
+
+    border-radius: 12px;
+
+    background: #f2f2f2;
+}
+
+
+#qrVideo {
+    display: none;
+
+    width: 100%;
+
+    height: 100%;
+
+    object-fit: cover;
+}
+
+
+#cameraPlaceholder {
+    position: absolute;
+
+    inset: 0;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    color: #777777;
+}
+
+
+.camera-icon {
+    font-size: 55px;
+
+    margin-bottom: 10px;
+}
+
+
+.scan-line {
+    display: none;
+
+    position: absolute;
+
+    left: 10%;
+
+    right: 10%;
+
+    top: 50%;
+
+    height: 2px;
+
+    background: #087f5b;
+
+    box-shadow: 0 0 8px #087f5b;
+
+    animation: scanAnimation 2s infinite;
+}
+
+
+@keyframes scanAnimation {
+
+    0% {
+        top: 20%;
+    }
+
+    50% {
+        top: 80%;
+    }
+
+    100% {
+        top: 20%;
+    }
+
+}
+
+
+/* ==================================================
+   BUTTON
+================================================== */
+
+.trace-button {
+    display: inline-block;
+
+    margin-top: 20px;
+
+    padding: 12px 25px;
+
+    border: none;
+
+    border-radius: 7px;
+
+    background: #087f5b;
+
+    color: white;
+
+    text-decoration: none;
+
+    font-size: 14px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+
+.trace-button:hover {
+    background: #066b4c;
+
+    transform: translateY(-1px);
+}
+
+
+.stop-button {
+    background: #d9534f;
+}
+
+
+.stop-button:hover {
+    background: #c9302c;
+}
+
+
+.secondary-button {
+    background: #777777;
+}
+
+
+.secondary-button:hover {
+    background: #555555;
+}
+
+
+.camera-message {
+    min-height: 20px;
+
+    color: #666666;
+
+    font-size: 14px;
+}
+
+
+/* ==================================================
+   NHẬP MÃ TRUY XUẤT
+================================================== */
+
+.manual-trace {
+    padding: 30px;
+
+    border-radius: 15px;
+
+    background: #f7fff2;
+
+    border: 1px solid #dfeeda;
+}
+
+
+.manual-trace h2 {
+    margin-top: 0;
+
+    color: #087f5b;
+}
+
+
+.manual-trace p {
+    color: #666666;
+
+    line-height: 1.6;
+}
+
+
+.trace-input-group {
+    display: flex;
+
+    gap: 10px;
+
+    margin-top: 25px;
+}
+
+
+.trace-input-group input {
+    flex: 1;
+
+    min-width: 0;
+
+    padding: 13px 15px;
+
+    border: 1px solid #cccccc;
+
+    border-radius: 7px;
+
+    outline: none;
+
+    font-size: 15px;
+}
+
+
+.trace-input-group input:focus {
+    border-color: #087f5b;
+}
+
+
+.trace-input-group .trace-button {
+    margin-top: 0;
+}
+
+
+.trace-error {
+    min-height: 22px;
+
+    color: #d9534f !important;
+
+    font-size: 14px;
+}
+
+
+/* ==================================================
+   MÃ DEMO
+================================================== */
+
+.demo-code {
+    margin-top: 20px;
+
+    display: flex;
+
+    align-items: center;
+
+    flex-wrap: wrap;
+
+    gap: 8px;
+}
+
+
+.demo-code span {
+    font-size: 14px;
+
+    color: #555555;
+}
+
+
+.demo-btn {
+    padding: 6px 10px;
+
+    border: 1px solid #087f5b;
+
+    border-radius: 5px;
+
+    background: white;
+
+    color: #087f5b;
+
+    cursor: pointer;
+}
+
+
+.demo-btn:hover {
+    background: #087f5b;
+
+    color: white;
+}
+
+
+/* ==================================================
+   TRANG KẾT QUẢ
+================================================== */
+
+.result-page {
+    width: 90%;
+
+    max-width: 1050px;
+
+    margin: 50px auto;
+
+    min-height: 650px;
+}
+
+
+.result-card {
+    overflow: hidden;
+
+    background: white;
+
+    border: 1px solid #dddddd;
+
+    border-radius: 15px;
+
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.07);
+}
+
+
+/* ==================================================
+   PHẦN THÔNG TIN CHÍNH
+================================================== */
+
+.result-main {
+    display: grid;
+
+    grid-template-columns: 350px 1fr;
+
+    gap: 35px;
+
+    padding: 30px;
+
+    background: #f7fff2;
+}
+
+
+.result-image {
+    width: 100%;
+
+    height: 270px;
+
+    overflow: hidden;
+
+    border-radius: 12px;
+
+    background: #eeeeee;
+}
+
+
+.result-image img {
+    width: 100%;
+
+    height: 100%;
+
+    object-fit: cover;
+}
+
+
+.result-information h2 {
+    margin-top: 15px;
+
+    margin-bottom: 20px;
+
+    color: #087f5b;
+}
+
+
+.result-information p {
+    margin: 12px 0;
+
+    color: #444444;
+
+    line-height: 1.5;
+}
+
+
+.verified-label {
+    display: inline-block;
+
+    padding: 6px 12px;
+
+    border-radius: 20px;
+
+    background: #087f5b;
+
+    color: white;
+
+    font-size: 12px;
+
+    font-weight: bold;
+}
+
+
+/* ==================================================
+   THÔNG TIN TRUY XUẤT
+================================================== */
+
+.trace-information {
+    padding: 30px;
+}
+
+
+.trace-information h3,
+.trace-description h3,
+.trace-process-section h3 {
+    margin-top: 0;
+
+    padding-bottom: 10px;
+
+    color: #087f5b;
+
+    border-bottom: 2px solid #dcefcf;
+}
+
+
+.info-grid {
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 15px;
+
+    margin-top: 20px;
+}
+
+
+.info-item {
+    padding: 15px;
+
+    border: 1px solid #e1e1e1;
+
+    border-radius: 8px;
+
+    background: #ffffff;
+}
+
+
+.info-item span {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: #777777;
+
+    font-size: 13px;
+}
+
+
+.info-item strong {
+    color: #333333;
+
+    line-height: 1.5;
+}
+
+
+/* ==================================================
+   MÔ TẢ
+================================================== */
+
+.trace-description {
+    padding: 0 30px 30px;
+}
+
+
+.trace-description p {
+    color: #555555;
+
+    line-height: 1.7;
+}
+
+
+/* ==================================================
+   QUY TRÌNH
+================================================== */
+
+.trace-process-section {
+    padding: 0 30px 35px;
+}
+
+
+.process {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    margin-top: 30px;
+}
+
+
+.process-step {
+    width: 100px;
+
+    text-align: center;
+}
+
+
+.process-number {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    width: 42px;
+
+    height: 42px;
+
+    margin: auto;
+
+    border-radius: 50%;
+
+    background: #087f5b;
+
+    color: white;
+
+    font-weight: bold;
+}
+
+
+.process-step p {
+    font-size: 13px;
+
+    color: #555555;
+
+    line-height: 1.4;
+}
+
+
+.process-line {
+    width: 50px;
+
+    height: 2px;
+
+    background: #087f5b;
+}
+
+
+/* ==================================================
+   KẾT QUẢ KHÔNG TÌM THẤY
+================================================== */
+
+.not-found {
+    padding: 70px 20px;
+
+    text-align: center;
+
+    border: 1px solid #dddddd;
+
+    border-radius: 15px;
+
+    background: white;
+}
+
+
+.not-found-icon {
+    font-size: 55px;
+}
+
+
+.not-found h2 {
+    color: #d9534f;
+}
+
+
+.not-found p {
+    color: #666666;
+}
+
+
+/* ==================================================
+   NÚT CUỐI TRANG
+================================================== */
+
+.result-actions {
+    display: flex;
+
+    justify-content: center;
+
+    gap: 12px;
+
+    margin-top: 25px;
+}
+
+
+.result-actions .trace-button {
+    margin-top: 0;
+}
+
+
+/* ==================================================
+   FOOTER
+================================================== */
+
+.trace-footer {
+    padding: 30px;
+
+    margin-top: 40px;
+
+    background: #087f5b;
+
+    color: white;
+
+    text-align: center;
+
+    line-height: 1.7;
+}
+
+
+.trace-footer p {
+    margin: 5px 0;
+}
+
+
+/* ==================================================
+   RESPONSIVE
+================================================== */
+
+@media (max-width: 800px) {
+
+    .trace-header {
+        flex-direction: column;
+
+        gap: 15px;
+    }
+
+
+    .trace-nav {
+        flex-wrap: wrap;
+
+        justify-content: center;
+
+        gap: 12px;
+    }
+
+
+    .qr-section {
+        grid-template-columns: 1fr;
+    }
+
+
+    .result-main {
+        grid-template-columns: 1fr;
+    }
+
+
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+
+
+    .process {
+        flex-direction: column;
+
+        gap: 5px;
+    }
+
+
+    .process-line {
+        width: 2px;
+
+        height: 30px;
+    }
+
+
+    .trace-input-group {
+        flex-direction: column;
+    }
+
+
+    .trace-input-group .trace-button {
+        width: 100%;
+    }
+
+
+    .result-actions {
+        flex-direction: column;
+
+        align-items: center;
+    }
+
+}
+
+/* ==================================================
+   ĐỒNG BỘ GIAO DIỆN VỚI TRANG CHỦ
+   Chỉ chỉnh CSS, không ảnh hưởng JavaScript
+================================================== */
+
+* {
+    box-sizing: border-box;
+}
+
+.trace-header {
+    min-height: 80px;
+}
+
+.trace-logo a {
+    display: inline-block;
+    line-height: 1.1;
+}
+
+.trace-nav {
+    align-items: center;
+}
+
+.trace-nav a {
+    display: inline-block;
+    padding: 10px 0;
+    transition: color 0.2s ease;
+}
+
+.trace-title h1,
+.manual-trace h2,
+.result-information h2,
+.trace-information h3,
+.trace-description h3,
+.trace-process-section h3 {
+    color: #078354;
+}
+
+.qr-camera,
+.manual-trace,
+.result-card,
+.not-found {
+    border-radius: 12px;
+}
+
+.trace-button {
+    border-radius: 7px;
+    background: #078354;
+}
+
+.trace-button:hover {
+    background: #066b45;
+}
+
+.trace-input-group input:focus {
+    border-color: #078354;
+    box-shadow: 0 0 0 3px rgba(7, 131, 84, 0.12);
+}
+
+.demo-btn {
+    border-color: #078354;
+    color: #078354;
+}
+
+.demo-btn:hover {
+    background: #078354;
+    color: #ffffff;
+}
+
+.process-number,
+.verified-label {
+    background: #078354;
+}
+
+.trace-footer {
+    background: #078354;
+}
+
+@media (max-width: 800px) {
+    .trace-header {
+        height: auto;
+        padding: 16px 5%;
+    }
+
+    .trace-nav a {
+        padding: 6px 2px;
+    }
+
+    .qr-page,
+    .result-page {
+        width: 92%;
+        margin: 30px auto;
+    }
+
+    .qr-camera,
+    .manual-trace {
+        padding: 20px;
+    }
+
+    .result-main,
+    .trace-information {
+        padding: 20px;
+    }
+
+    .trace-description,
+    .trace-process-section {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .trace-nav {
+        gap: 10px;
+        font-size: 13px;
+    }
+
+    .trace-title h1 {
+        font-size: 24px;
+    }
+
+    .camera-frame {
+        height: 250px;
+    }
+
+    .result-actions {
+        width: 100%;
+    }
+
+    .result-actions .trace-button {
+        width: 100%;
+        text-align: center;
+    }
+}

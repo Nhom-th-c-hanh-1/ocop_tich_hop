@@ -1,0 +1,1400 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh sách sản phẩm OCOP</title>
+    <link rel="stylesheet" href="css/product.css">
+
+    <style>
+        .product-card { overflow: hidden; }
+        .product-card a {
+            display: block;
+            color: inherit;
+            text-decoration: none;
+        }
+        .product-card h3 { margin: 12px 0 8px; }
+        .product-card p { margin: 6px 12px; }
+        .product-image { overflow: hidden; }
+        .product-image img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            display: block;
+        }
+        .no-image {
+            width: 100%;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f0f0f0;
+            color: #666;
+        }
+        .product-message {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 24px;
+        }
+        .filter-section button.active {
+            background: #237a42;
+            color: white;
+        }
+        .product-stars {
+            color: #e5a100;
+            font-size: 18px;
+            margin: 8px 12px;
+        }
+        .product-code {
+            color: #555;
+            font-size: 14px;
+        }
+        .product-actions {
+            display: flex;
+            gap: 8px;
+            padding: 12px;
+            flex-wrap: wrap;
+        }
+        .product-actions button,
+        .add-product-button {
+            border: none;
+            border-radius: 6px;
+            padding: 9px 13px;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .edit-button,
+        .add-product-button {
+            background: #198754;
+        }
+        .delete-button {
+            background: #dc3545;
+        }
+        .product-actions button:hover,
+        .add-product-button:hover {
+            opacity: 0.85;
+        }
+        .manage-toolbar {
+            display: none;
+            margin: 16px auto;
+            text-align: center;
+        }
+    /* QUẢN LÝ LÔ SẢN XUẤT */
+.lot-management {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 24px;
+    background: #f7fff4;
+    border-radius: 12px;
+}
+
+.lot-management h2 {
+    color: #237a42;
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.lot-form,
+.lot-list {
+    background: white;
+    padding: 20px;
+    margin-bottom: 25px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.lot-form h3,
+.lot-list h3 {
+    color: #237a42;
+    margin-bottom: 18px;
+}
+
+.lot-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.lot-form-grid label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: bold;
+}
+
+.lot-form-grid input,
+.lot-form-grid select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+.lot-submit-button,
+.qr-button {
+    background: #198754;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 18px;
+}
+
+.lot-table-wrapper {
+    overflow-x: auto;
+}
+
+.lot-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 750px;
+}
+
+.lot-table th,
+.lot-table td {
+    border: 1px solid #ddd;
+    padding: 11px;
+    text-align: center;
+}
+
+.lot-table th {
+    background: #d9f7c5;
+}
+
+.qr-button {
+    margin: 0;
+}
+
+.qr-result {
+    text-align: center;
+    padding: 20px;
+}
+
+.qr-result img {
+    display: block;
+    width: 200px;
+    max-width: 100%;
+    margin: 15px auto;
+}
+
+@media (max-width: 600px) {
+    .lot-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .lot-management {
+        margin: 20px 10px;
+        padding: 12px;
+    }
+}
+    </style>
+</head>
+
+<body>
+<header class="header">
+    <div class="header-left">
+        <a href="index.html" class="logo">
+            <span class="logo-icon">🌿</span>
+            <span><b>OC</b><br><b>OP</b></span>
+        </a>
+    </div>
+
+    <nav>
+        <a href="index.html">TRANG CHỦ</a>
+        <a href="products.html" class="active">SẢN PHẨM</a>
+        <a href="trace-product.html">TRA CỨU</a>
+        <a href="scan-qr.html">QUÉT QR</a>
+    </nav>
+</header>
+
+<section class="product-header">
+    <h1>DANH SÁCH SẢN PHẨM OCOP</h1>
+
+    <div id="manageToolbar" class="manage-toolbar">
+    <button class="add-product-button" type="button"
+            onclick="goToAddProduct()">
+        + Thêm sản phẩm
+    </button>
+
+    <button class="add-product-button" type="button"
+            onclick="showLotManagement()">
+        + Quản lý lô sản xuất
+    </button>
+</div>
+
+    <div class="search-area">
+        <input
+            type="text"
+            id="searchInput"
+            placeholder="Nhập tên sản phẩm hoặc mã OCOP"
+        >
+        <button id="searchButton" type="button">Tìm kiếm</button>
+        <button id="resetButton" type="button">Xóa bộ lọc</button>
+    </div>
+
+    <p id="resultCount" aria-live="polite"></p>
+</section>
+
+<main class="products-container">
+    <aside class="sidebar">
+        <div class="filter-section">
+            <h2>ĐỊA PHƯƠNG</h2>
+            <button type="button" class="location-filter" data-value="HÀ NỘI">HÀ NỘI</button>
+            <button type="button" class="location-filter" data-value="THÁI NGUYÊN">THÁI NGUYÊN</button>
+            <button type="button" class="location-filter" data-value="PHÚ THỌ">PHÚ THỌ</button>
+            <button type="button" class="location-filter" data-value="HÀ GIANG">HÀ GIANG</button>
+        </div>
+
+        <div class="filter-section">
+            <h2>MỨC OCOP</h2>
+            <button type="button" class="star-filter" data-value="3">★★★</button>
+            <button type="button" class="star-filter" data-value="4">★★★★</button>
+            <button type="button" class="star-filter" data-value="5">★★★★★</button>
+        </div>
+
+        <div class="filter-section">
+            <h2>LOẠI SẢN PHẨM</h2>
+            <button type="button" class="type-filter" data-value="NÔNG SẢN">NÔNG SẢN</button>
+            <button type="button" class="type-filter" data-value="THỰC PHẨM">THỰC PHẨM</button>
+            <button type="button" class="type-filter" data-value="ĐỒ UỐNG">ĐỒ UỐNG</button>
+        </div>
+    </aside>
+
+    <section class="product-area">
+        <div class="product-grid" id="productGrid">
+            <p class="product-message">Đang tải danh sách sản phẩm...</p>
+        </div>
+    </section>
+    <section id="lotManagement" class="lot-management" style="display:none;">
+    <h2>QUẢN LÝ LÔ SẢN XUẤT</h2>
+
+    <div class="lot-form">
+        <h3>Thêm lô sản xuất mới</h3>
+
+        <form id="lotForm">
+            <div class="lot-form-grid">
+                <div>
+                    <label>Sản phẩm</label>
+                    <select id="lotProduct" required>
+                        <option value="">-- Chọn sản phẩm --</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Vùng nguyên liệu</label>
+                    <select id="lotRegion" required>
+                        <option value="">-- Chọn vùng nguyên liệu --</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Mã số lô</label>
+                    <input id="lotCode" type="text"
+                           placeholder="Ví dụ: LO-OCOP001-2026-002" required>
+                </div>
+
+                <div>
+                    <label>Số lượng</label>
+                    <input id="lotQuantity" type="number"
+                           min="0.01" step="0.01" required>
+                </div>
+
+                <div>
+                    <label>Đơn vị tính</label>
+                    <input id="lotUnit" type="text"
+                           placeholder="kg, lit, hộp..." required>
+                </div>
+
+                <div>
+                    <label>Ngày thu hoạch</label>
+                    <input id="lotHarvestDate" type="date">
+                </div>
+
+                <div>
+                    <label>Ngày sản xuất</label>
+                    <input id="lotProductionDate" type="date" required>
+                </div>
+
+                <div>
+                    <label>Hạn sử dụng</label>
+                    <input id="lotExpiryDate" type="date">
+                </div>
+            </div>
+
+            <button type="submit" class="lot-submit-button">
+                + Lưu lô sản xuất
+            </button>
+        </form>
+    </div>
+
+    <div class="lot-list">
+        <h3>DANH SÁCH LÔ SẢN XUẤT</h3>
+
+        <div class="lot-table-wrapper">
+            <table class="lot-table">
+                <thead>
+                    <tr>
+                        <th>Mã lô</th>
+                        <th>Sản phẩm</th>
+                        <th>Vùng nguyên liệu</th>
+                        <th>Số lượng</th>
+                        <th>Trạng thái</th>
+                        <th>Mã QR</th>
+                    </tr>
+                </thead>
+                <tbody id="lotTableBody">
+                    <tr>
+                        <td colspan="6">Đang tải dữ liệu...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="qrResult" class="qr-result"></div>
+</section>
+</main>
+<!-- QUẢN LÝ LÔ SẢN XUẤT -->
+<section id="lotManagement" class="lot-management" style="display:none">
+    <h2>QUẢN LÝ LÔ SẢN XUẤT</h2>
+
+    <div class="lot-form">
+        <h3>Thêm lô sản xuất mới</h3>
+
+        <form id="lotForm">
+            <div class="lot-form-grid">
+                <div>
+                    <label>Sản phẩm</label>
+                    <select id="lotProduct" required>
+                        <option value="">-- Chọn sản phẩm --</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Vùng nguyên liệu</label>
+                    <select id="lotRegion" required>
+                        <option value="">-- Chọn vùng nguyên liệu --</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Mã số lô</label>
+                    <input id="lotCode" type="text"
+                           placeholder="Ví dụ: LO-OCOP001-2026-002" required>
+                </div>
+
+                <div>
+                    <label>Số lượng</label>
+                    <input id="lotQuantity" type="number"
+                           min="0.01" step="0.01" required>
+                </div>
+
+                <div>
+                    <label>Đơn vị tính</label>
+                    <input id="lotUnit" type="text"
+                           placeholder="kg, lit, hộp..." required>
+                </div>
+
+                <div>
+                    <label>Ngày thu hoạch</label>
+                    <input id="lotHarvestDate" type="date">
+                </div>
+
+                <div>
+                    <label>Ngày sản xuất</label>
+                    <input id="lotProductionDate" type="date" required>
+                </div>
+
+                <div>
+                    <label>Hạn sử dụng</label>
+                    <input id="lotExpiryDate" type="date">
+                </div>
+            </div>
+
+            <button type="submit" class="lot-submit-button">
+                + Lưu lô sản xuất
+            </button>
+        </form>
+    </div>
+
+    <div class="lot-list">
+        <h3>Danh sách lô sản xuất</h3>
+
+        <div class="lot-table-wrapper">
+            <table class="lot-table">
+                <thead>
+                    <tr>
+                        <th>Mã lô</th>
+                        <th>Sản phẩm</th>
+                        <th>Vùng nguyên liệu</th>
+                        <th>Số lượng</th>
+                        <th>Trạng thái</th>
+                        <th>Mã QR</th>
+                    </tr>
+                </thead>
+                <tbody id="lotTableBody">
+                    <tr>
+                        <td colspan="6">Đang tải dữ liệu...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="qrResult" class="qr-result"></div>
+</section>
+<script>
+   const API_BASE = window.location.origin + '/api';
+const API_URL = API_BASE + '/products';
+const LOT_API_URL = API_BASE + '/lo-san-xuat';
+const REGION_API_URL = API_BASE + '/vung-nguyen-lieu';
+
+    const searchInput = document.getElementById('searchInput');
+    const searchButton = document.getElementById('searchButton');
+    const resetButton = document.getElementById('resetButton');
+    const productGrid = document.getElementById('productGrid');
+    const resultCount = document.getElementById('resultCount');
+
+    let products = [];
+    let selectedLocation = '';
+    let selectedLevel = '';
+    let selectedType = '';
+
+    // Đọc thông tin tài khoản đã đăng nhập
+    function getCurrentUser() {
+        try {
+            return JSON.parse(localStorage.getItem('ocopUser') || '{}');
+        } catch {
+            return {};
+        }
+    }
+
+    function normalizeRole(role) {
+        return String(role || '')
+            .trim()
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/đ/g, 'd')
+            .replace(/[^a-z0-9]+/g, '_')
+            .replace(/^_+|_+$/g, '');
+    }
+
+    const currentUser = getCurrentUser();
+    const currentRole = normalizeRole(
+        currentUser.vaiTro || currentUser.role
+    );
+
+    const canManageProducts = [
+        'admin',
+        'co_so_san_xuat'
+    ].includes(currentRole);
+
+    // Hiện nút quản lý cho admin và cơ sở sản xuất
+    if (canManageProducts) {
+        document.getElementById('manageToolbar').style.display = 'block';
+    }
+
+    function goToAddProduct() {
+        if (!canManageProducts) {
+            alert('Bạn không có quyền thêm sản phẩm.');
+            return;
+        }
+
+        window.location.href = 'add-product.html';
+    }
+    function showLotManagement() {
+    const section = document.getElementById('lotManagement');
+
+    if (!section) {
+        alert('Không tìm thấy khu vực quản lý lô sản xuất.');
+        return;
+    }
+
+    section.style.display = 'block';
+    section.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+    });
+
+   loadLotProducts();
+    loadLotRegions();
+    loadLots();
+}
+
+    const imageMap = {
+        'ca phe dac san': 'images/ca-phe.jpg',
+        'cam sanh dac san': 'images/cam-sanh.jpg',
+        'che xanh tan cuong': 'images/che-xanh.jpg',
+        'chuoi say deo': 'images/chuoi-say.jpg',
+        'gao st25': 'images/gao-st25.jpg',
+        'mat ong bac ha': 'images/mat-ong.jpg'
+    };
+    async function loadLotProducts() {
+    const productSelect = document.getElementById('lotProduct');
+
+    try {
+        const token = localStorage.getItem('ocopToken');
+
+        const response = await fetch(API_URL, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Không tải được danh sách sản phẩm');
+        }
+
+        const data = await response.json();
+        const productList = Array.isArray(data) ? data : data.data;
+
+        productSelect.innerHTML =
+            '<option value="">-- Chọn sản phẩm --</option>';
+
+        productList.forEach(product => {
+            productSelect.innerHTML += `
+                <option value="${product.MaSanPham}">
+                    ${escapeHTML(product.TenSanPham)}
+                </option>
+            `;
+        });
+
+    } catch (error) {
+        console.error(error);
+        alert('Không tải được danh sách sản phẩm.');
+    }
+}
+    async function loadLotRegions() {
+    const regionSelect = document.getElementById('lotRegion');
+
+    try {
+        const token = localStorage.getItem('ocopToken');
+
+        const response = await fetch(REGION_API_URL, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Không tải được vùng nguyên liệu');
+        }
+
+        const regions = await response.json();
+
+        regionSelect.innerHTML =
+            '<option value="">-- Chọn vùng nguyên liệu --</option>';
+
+        regions.forEach(region => {
+            regionSelect.innerHTML += `
+                <option value="${region.MaVung}">
+                    ${region.TenVung} - ${region.DiaChi}
+                </option>
+            `;
+        });
+
+    } catch (error) {
+        console.error(error);
+        alert('Không tải được danh sách vùng nguyên liệu.');
+    }
+}
+    async function loadLots() {
+    const tableBody = document.getElementById('lotTableBody');
+
+    try {
+        const token = localStorage.getItem('ocopToken');
+
+        const response = await fetch(LOT_API_URL, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Không tải được danh sách lô sản xuất');
+        }
+
+        const lots = await response.json();
+
+        if (!Array.isArray(lots) || lots.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="6">Chưa có lô sản xuất nào.</td>
+                </tr>
+            `;
+            return;
+        }
+
+        tableBody.innerHTML = lots.map(lot => `
+            <tr>
+                <td>${escapeHTML(lot.MaSoLo)}</td>
+                <td>${escapeHTML(lot.TenSanPham)}</td>
+                <td>${escapeHTML(lot.TenVung)}</td>
+                <td>${escapeHTML(lot.SoLuong)} ${escapeHTML(lot.DonViTinh)}</td>
+                <td>${escapeHTML(lot.TrangThai)}</td>
+                <td>
+                    <button type="button" class="qr-button"
+                        onclick="generateLotQR(${Number(lot.MaLo)})">
+                        Tạo QR
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+
+    } catch (error) {
+        console.error(error);
+
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="6">Lỗi tải danh sách lô sản xuất.</td>
+            </tr>
+        `;
+    }
+}
+    async function generateLotQR(id) {
+    const qrResult = document.getElementById('qrResult');
+
+    try {
+        const token = localStorage.getItem('ocopToken');
+
+        qrResult.innerHTML = 'Đang tạo mã QR...';
+
+        const response = await fetch(`${LOT_API_URL}/${id}/qr`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || 'Không tạo được mã QR');
+        }
+
+        const qr = result.data || result;
+
+        const imagePath = qr.HinhAnhQR || qr.hinhAnhQR;
+
+        if (!imagePath) {
+            throw new Error('API không trả về đường dẫn ảnh QR');
+        }
+
+        const imageUrl = new URL(imagePath, window.location.origin).href;
+
+        qrResult.innerHTML = `
+            <h3>MÃ QR LÔ SẢN XUẤT</h3>
+            <img src="${escapeHTML(imageUrl)}"
+                 alt="Mã QR lô sản xuất">
+            <p>${escapeHTML(qr.NoiDungQR || qr.noiDungQR || '')}</p>
+            <a href="${escapeHTML(imageUrl)}"
+               download="ma-qr-lo-${id}.png">
+                Tải mã QR
+            </a>
+        `;
+
+        qrResult.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+        });
+
+    } catch (error) {
+        console.error(error);
+        qrResult.innerHTML = '';
+        alert(error.message || 'Có lỗi khi tạo mã QR.');
+    }
+}
+    document.getElementById('lotForm').addEventListener('submit', async function(event) {
+    event.preventDefault();
+
+    try {
+        const token = localStorage.getItem('ocopToken');
+
+        const lotData = {
+            MaSanPham: Number(document.getElementById('lotProduct').value),
+            MaVung: Number(document.getElementById('lotRegion').value),
+            MaSoLo: document.getElementById('lotCode').value.trim(),
+            NgayThuHoach: document.getElementById('lotHarvestDate').value || null,
+            NgaySanXuat: document.getElementById('lotProductionDate').value,
+            HanSuDung: document.getElementById('lotExpiryDate').value || null,
+            SoLuong: Number(document.getElementById('lotQuantity').value),
+            DonViTinh: document.getElementById('lotUnit').value.trim(),
+            TrangThai: 'hoan_thanh'
+        };
+
+        const response = await fetch(LOT_API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(lotData)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || 'Không thể lưu lô sản xuất');
+        }
+
+        alert('Thêm lô sản xuất thành công!');
+
+        document.getElementById('lotForm').reset();
+
+        await loadLots();
+
+    } catch (error) {
+        console.error(error);
+        alert(error.message || 'Có lỗi khi thêm lô sản xuất.');
+    }
+});
+    function escapeHTML(value) {
+        return String(value ?? '').replace(/[&<>"']/g, char => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        })[char]);
+    }
+
+    function normalizeText(value) {
+        return String(value || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/đ/g, 'd')
+            .replace(/Đ/g, 'D')
+            .toLowerCase()
+            .trim();
+    }
+
+    function getCategory(product) {
+        const category = normalizeText(product.NhomSanPham);
+
+        if (
+            category.includes('che') ||
+            category.includes('tra') ||
+            category.includes('do uong')
+        ) {
+            return 'ĐỒ UỐNG';
+        }
+
+        if (category.includes('thuc pham')) {
+            return 'THỰC PHẨM';
+        }
+
+        if (category.includes('nong san')) {
+            return 'NÔNG SẢN';
+        }
+
+        return String(
+            product.NhomSanPham || 'CHƯA PHÂN LOẠI'
+        ).toUpperCase();
+    }
+
+    function getProductImage(product) {
+        const databaseImage = String(product.HinhAnh || '').trim();
+
+        if (databaseImage) return databaseImage;
+
+        return imageMap[normalizeText(product.TenSanPham)] || '';
+    }
+
+    function showMessage(message) {
+        productGrid.innerHTML = '';
+
+        const p = document.createElement('p');
+        p.className = 'product-message';
+        p.textContent = message;
+        productGrid.appendChild(p);
+
+        resultCount.textContent = '';
+    }
+
+    // Hiển thị danh sách sản phẩm và các nút quản lý
+    function renderProducts(list) {
+        resultCount.textContent = `Tìm thấy ${list.length} sản phẩm`;
+
+        if (!list.length) {
+            showMessage('Không tìm thấy sản phẩm phù hợp.');
+            resultCount.textContent = 'Tìm thấy 0 sản phẩm';
+            return;
+        }
+
+        productGrid.innerHTML = list.map(product => {
+            const id = Number(product.MaSanPham);
+            const name = escapeHTML(product.TenSanPham);
+            const code = escapeHTML(product.MaSanPhamOCOP || 'Chưa có mã');
+            const category = escapeHTML(getCategory(product));
+            const image = escapeHTML(getProductImage(product));
+            const stars = Math.max(
+                0,
+                Math.min(5, Number(product.SoSaoOCOP || 0))
+            );
+
+            const detailUrl =
+                'product-detail.html?id=' + encodeURIComponent(id);
+
+            const imageHTML = image
+                ? `<img src="${image}" alt="${name}" loading="lazy"
+                    onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex';">
+                   <div class="no-image" style="display:none">Không tải được ảnh</div>`
+                : `<div class="no-image">Chưa có hình ảnh</div>`;
+
+            const actionButtons = canManageProducts
+                ? `<div class="product-actions">
+                       <button type="button" class="edit-button"
+                           onclick="editProduct(${id})">Sửa</button>
+                       <button type="button" class="delete-button"
+                           onclick="deleteProduct(${id})">Xóa</button>
+                   </div>`
+                : '';
+
+            return `
+                <div class="product-card">
+                    <a href="${detailUrl}">
+                        <div class="product-image">${imageHTML}</div>
+                        <h3>${name}</h3>
+                        <p>Nhóm: ${category}</p>
+                        <p class="product-code">Mã OCOP: ${code}</p>
+                        <p class="product-stars" aria-label="${stars} sao OCOP">
+                            ${stars
+                                ? '★'.repeat(stars) + '☆'.repeat(5 - stars)
+                                : 'Chưa xếp hạng'}
+                        </p>
+                        <p>Cơ sở: ${escapeHTML(product.TenCoSo || 'Chưa cập nhật')}</p>
+                        <p>Địa phương: ${escapeHTML(
+                            product.DiaPhuong ||
+                            product.TenTinh ||
+                            product.TinhThanh ||
+                            'Chưa cập nhật'
+                        )}</p>
+                    </a>
+                    ${actionButtons}
+                </div>
+            `;
+        }).join('');
+    }
+
+    function filterProducts() {
+        const keyword = normalizeText(searchInput.value);
+
+        const filtered = products.filter(product => {
+            const name = normalizeText(product.TenSanPham);
+            const code = normalizeText(product.MaSanPhamOCOP);
+            const category = normalizeText(getCategory(product));
+
+            const location = normalizeText(
+                product.DiaPhuong ||
+                product.TenTinh ||
+                product.TinhThanh ||
+                ''
+            );
+
+            const level = Number(product.SoSaoOCOP || 0);
+
+            const matchKeyword =
+                !keyword ||
+                name.includes(keyword) ||
+                code.includes(keyword) ||
+                category.includes(keyword);
+
+            const matchLocation =
+                !selectedLocation ||
+                location.includes(normalizeText(selectedLocation));
+
+            const matchLevel =
+                !selectedLevel ||
+                level === Number(selectedLevel);
+
+            const matchType =
+                !selectedType ||
+                normalizeText(getCategory(product)) ===
+                normalizeText(selectedType);
+
+            return matchKeyword &&
+                matchLocation &&
+                matchLevel &&
+                matchType;
+        });
+
+        renderProducts(filtered);
+    }
+
+    // Tải sản phẩm từ Backend
+    async function loadProducts() {
+        showMessage('Đang tải danh sách sản phẩm...');
+
+        try {
+            const token = localStorage.getItem('ocopToken');
+
+            if (!token) {
+                showMessage('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
+                return;
+            }
+
+            const response = await fetch(API_URL, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    result.message || `Lỗi máy chủ: HTTP ${response.status}`
+                );
+            }
+
+            products = Array.isArray(result)
+                ? result
+                : Array.isArray(result.data)
+                    ? result.data
+                    : [];
+
+            filterProducts();
+        } catch (error) {
+            console.error('Lỗi tải sản phẩm:', error);
+            showMessage(
+                error.message || 'Không tải được danh sách sản phẩm.'
+            );
+        }
+    }
+
+    // Sửa tên sản phẩm
+    async function editProduct(id) {
+        if (!canManageProducts) {
+            alert('Bạn không có quyền sửa sản phẩm.');
+            return;
+        }
+
+        const product = products.find(
+            item => Number(item.MaSanPham) === Number(id)
+        );
+
+        if (!product) {
+            alert('Không tìm thấy sản phẩm.');
+            return;
+        }
+
+        const newName = prompt(
+            'Nhập tên sản phẩm mới:',
+            product.TenSanPham || ''
+        );
+
+        if (newName === null) return;
+
+        if (!newName.trim()) {
+            alert('Tên sản phẩm không được để trống.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('ocopToken')}`
+                },
+                body: JSON.stringify({
+                    TenSanPham: newName.trim()
+                })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    result.message || 'Sửa sản phẩm thất bại.'
+                );
+            }
+
+            alert(result.message || 'Cập nhật thành công.');
+            await loadProducts();
+        } catch (error) {
+            console.error('Lỗi sửa sản phẩm:', error);
+            alert(error.message || 'Không thể sửa sản phẩm.');
+        }
+    }
+
+    // Xóa sản phẩm
+    async function deleteProduct(id) {
+        if (!canManageProducts) {
+            alert('Bạn không có quyền xóa sản phẩm.');
+            return;
+        }
+
+        const confirmed = confirm(
+            'Bạn có chắc chắn muốn xóa sản phẩm này không?'
+        );
+
+        if (!confirmed) return;
+
+        try {
+            const response = await fetch(`${API_URL}/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('ocopToken')}`
+                }
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    result.message || 'Xóa sản phẩm thất bại.'
+                );
+            }
+
+            alert(result.message || 'Xóa sản phẩm thành công.');
+            await loadProducts();
+        } catch (error) {
+            console.error('Lỗi xóa sản phẩm:', error);
+            alert(error.message || 'Không thể xóa sản phẩm.');
+        }
+    }
+
+    function updateFilters() {
+        document.querySelectorAll('.location-filter').forEach(button => {
+            button.classList.toggle(
+                'active',
+                button.dataset.value === selectedLocation
+            );
+        });
+
+        document.querySelectorAll('.star-filter').forEach(button => {
+            button.classList.toggle(
+                'active',
+                button.dataset.value === selectedLevel
+            );
+        });
+
+        document.querySelectorAll('.type-filter').forEach(button => {
+            button.classList.toggle(
+                'active',
+                button.dataset.value === selectedType
+            );
+        });
+
+        filterProducts();
+    }
+
+    document.querySelectorAll('.location-filter').forEach(button => {
+        button.addEventListener('click', () => {
+            const value = button.dataset.value;
+            selectedLocation = selectedLocation === value ? '' : value;
+            updateFilters();
+        });
+    });
+
+    document.querySelectorAll('.star-filter').forEach(button => {
+        button.addEventListener('click', () => {
+            const value = button.dataset.value;
+            selectedLevel = selectedLevel === value ? '' : value;
+            updateFilters();
+        });
+    });
+
+    document.querySelectorAll('.type-filter').forEach(button => {
+        button.addEventListener('click', () => {
+            const value = button.dataset.value;
+            selectedType = selectedType === value ? '' : value;
+            updateFilters();
+        });
+    });
+
+    searchButton.addEventListener('click', filterProducts);
+
+    searchInput.addEventListener('keydown', event => {
+        if (event.key === 'Enter') {
+            filterProducts();
+        }
+    });
+
+    resetButton.addEventListener('click', () => {
+        searchInput.value = '';
+        selectedLocation = '';
+        selectedLevel = '';
+        selectedType = '';
+        updateFilters();
+    });
+
+   // ===============================
+// QUẢN LÝ LÔ SẢN XUẤT
+// ===============================
+
+const lotManagement = document.getElementById('lotManagement');
+const lotForm = document.getElementById('lotForm');
+const lotProduct = document.getElementById('lotProduct');
+const lotRegion = document.getElementById('lotRegion');
+const lotTableBody = document.getElementById('lotTableBody');
+const qrResult = document.getElementById('qrResult');
+
+// Chỉ admin và cơ sở sản xuất được quản lý lô
+if (canManageProducts) {
+    lotManagement.style.display = 'block';
+}
+
+// Gửi yêu cầu đến Backend
+async function fetchJSON(url, options = {}) {
+    const token = localStorage.getItem('ocopToken');
+
+    const response = await fetch(url, {
+        ...options,
+        headers: {
+            ...(options.headers || {}),
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        }
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            result.message || `Lỗi HTTP ${response.status}`
+        );
+    }
+
+    return result;
+}
+
+// Đổ danh sách sản phẩm vào hộp chọn
+function populateLotProducts() {
+    lotProduct.innerHTML =
+        '<option value="">-- Chọn sản phẩm --</option>';
+
+    products.forEach(product => {
+        const option = document.createElement('option');
+        option.value = product.MaSanPham;
+        option.textContent =
+            `${product.TenSanPham} (${product.MaSanPhamOCOP || 'Chưa có mã'})`;
+
+        lotProduct.appendChild(option);
+    });
+}
+
+// Lấy danh sách vùng nguyên liệu
+async function loadLotRegions() {
+    try {
+        const regions = await fetchJSON(REGION_API_URL);
+
+        lotRegion.innerHTML =
+            '<option value="">-- Chọn vùng nguyên liệu --</option>';
+
+        regions.forEach(region => {
+            const option = document.createElement('option');
+            option.value = region.MaVung;
+            option.textContent =
+                `${region.TenVung} - ${region.DiaChi}`;
+
+            lotRegion.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Lỗi tải vùng nguyên liệu:', error);
+        alert('Không tải được danh sách vùng nguyên liệu: ' + error.message);
+    }
+}
+
+// Định dạng ngày
+function formatLotDate(value) {
+    if (!value) return 'Chưa cập nhật';
+
+    return String(value).slice(0, 10);
+}
+
+// Lấy danh sách lô sản xuất
+async function loadLots() {
+    try {
+        const result = await fetchJSON(LOT_API_URL);
+
+        const lots = Array.isArray(result)
+            ? result
+            : Array.isArray(result.data)
+                ? result.data
+                : [];
+
+        if (lots.length === 0) {
+            lotTableBody.innerHTML = `
+                <tr>
+                    <td colspan="6">Chưa có lô sản xuất nào.</td>
+                </tr>
+            `;
+            return;
+        }
+
+        lotTableBody.innerHTML = lots.map(lot => `
+            <tr>
+                <td>${escapeHTML(lot.MaSoLo)}</td>
+                <td>${escapeHTML(lot.TenSanPham || '')}</td>
+                <td>${escapeHTML(lot.TenVung || '')}</td>
+                <td>
+                    ${escapeHTML(lot.SoLuong)}
+                    ${escapeHTML(lot.DonViTinh)}
+                </td>
+                <td>${escapeHTML(lot.TrangThai || '')}</td>
+                <td>
+                    <button class="qr-button" type="button"
+                        onclick="generateLotQR(${Number(lot.MaLo)})">
+                        Tạo / Xem QR
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+
+    } catch (error) {
+        console.error('Lỗi tải lô sản xuất:', error);
+
+        lotTableBody.innerHTML = `
+            <tr>
+                <td colspan="6">
+                    Không tải được danh sách lô: ${escapeHTML(error.message)}
+                </td>
+            </tr>
+        `;
+    }
+}
+
+// Thêm lô sản xuất
+lotForm.addEventListener('submit', async function(event) {
+    event.preventDefault();
+
+    if (!canManageProducts) {
+        alert('Bạn không có quyền tạo lô sản xuất.');
+        return;
+    }
+
+    const data = {
+        MaSanPham: Number(lotProduct.value),
+        MaVung: Number(lotRegion.value),
+        MaSoLo: document.getElementById('lotCode').value.trim(),
+        NgayThuHoach:
+            document.getElementById('lotHarvestDate').value || null,
+        NgaySanXuat:
+            document.getElementById('lotProductionDate').value,
+        HanSuDung:
+            document.getElementById('lotExpiryDate').value || null,
+        SoLuong: Number(document.getElementById('lotQuantity').value),
+        DonViTinh: document.getElementById('lotUnit').value.trim(),
+        TrangThai: 'dang_san_xuat'
+    };
+
+    if (!data.MaSanPham || !data.MaVung) {
+        alert('Vui lòng chọn sản phẩm và vùng nguyên liệu.');
+        return;
+    }
+
+    if (!data.MaSoLo || !data.NgaySanXuat ||
+        !data.SoLuong || data.SoLuong <= 0 || !data.DonViTinh) {
+        alert('Vui lòng nhập đầy đủ và chính xác thông tin lô.');
+        return;
+    }
+
+    try {
+        const result = await fetchJSON(LOT_API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        alert(result.message || 'Thêm lô sản xuất thành công!');
+
+        lotForm.reset();
+        await loadLots();
+
+    } catch (error) {
+        console.error('Lỗi thêm lô:', error);
+        alert('Không thể thêm lô sản xuất: ' + error.message);
+    }
+});
+
+// Tạo hoặc lấy mã QR của lô
+async function generateLotQR(id) {
+    if (!canManageProducts) {
+        alert('Bạn không có quyền tạo mã QR.');
+        return;
+    }
+
+    try {
+        qrResult.innerHTML = '<p>Đang tạo mã QR...</p>';
+
+        const result = await fetchJSON(`${LOT_API_URL}/${id}/qr`, {
+            method: 'POST'
+        });
+
+        // Hỗ trợ một số cách đặt tên trường trả về từ Backend
+        const qrData = result.qr || result.data || result;
+
+        const imagePath =
+            qrData.HinhAnhQR ||
+            qrData.hinhAnhQR ||
+            qrData.image ||
+            qrData.qrImage ||
+            qrData.qrUrl;
+
+        const qrContent =
+            qrData.NoiDungQR ||
+            qrData.noiDungQR ||
+            qrData.content ||
+            '';
+
+        if (!imagePath) {
+            console.log('Kết quả API tạo QR:', result);
+            qrResult.innerHTML = `
+                <p>Backend đã phản hồi nhưng chưa tìm thấy đường dẫn ảnh QR.</p>
+                <p>Hãy kiểm tra nội dung phản hồi trong Console.</p>
+            `;
+            return;
+        }
+
+        const imageURL = new URL(
+            String(imagePath).replace(/^\/+/, ''),
+            window.location.origin + '/'
+        ).href;
+
+        qrResult.innerHTML = `
+            <h3>MÃ QR TRUY XUẤT NGUỒN GỐC</h3>
+            <img src="${escapeHTML(imageURL)}" alt="Mã QR lô sản xuất">
+            <p>Mã nội dung: ${escapeHTML(qrContent)}</p>
+            <a href="${escapeHTML(imageURL)}" download="ma-qr-lo-san-xuat.png">
+                Tải ảnh mã QR
+            </a>
+        `;
+
+        qrResult.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+        });
+
+    } catch (error) {
+        console.error('Lỗi tạo QR:', error);
+        qrResult.innerHTML = '';
+        alert('Không thể tạo mã QR: ' + error.message);
+    }
+}
+
+// Khi tải sản phẩm thành công, cập nhật hộp chọn sản phẩm
+const oldLoadProducts = loadProducts;
+
+loadProducts = async function() {
+    await oldLoadProducts();
+
+    if (canManageProducts) {
+        populateLotProducts();
+    }
+};
+
+// Tải dữ liệu ban đầu
+loadProducts();
+loadLotRegions();
+loadLots();
+</script>
+</body>
+</html>

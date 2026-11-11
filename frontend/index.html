@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Truy xuất nguồn gốc nông sản OCOP</title>
+
+    <!-- Kết nối file CSS -->
+    <link rel="stylesheet" href="css/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+</head>
+
+<body>
+
+    <!-- ================= HEADER ================= -->
+
+    <header>
+
+        <div class="logo">
+            <div class="logo-icon">🌿</div>
+
+            <div class="logo-text">
+                OC<br>
+                OP
+            </div>
+        </div>
+
+       <nav>
+    <a href="index.html">TRANG CHỦ</a>
+    <a href="products.html">SẢN PHẨM</a>
+    <a href="trace-product.html">TRA CỨU</a>
+    <a href="#" onclick="quetQR()">QUÉT QR</a>
+    <a href="login.html">ĐĂNG NHẬP</a>
+    <a href="register.html">ĐĂNG KÝ</a>
+</nav>
+
+    </header>
+
+
+    <!-- ================= ẢNH CÁNH ĐỒNG ================= -->
+
+    <section class="hero"></section>
+
+
+    <!-- ================= TIÊU ĐỀ ================= -->
+
+    <section class="title-section">
+
+        <h1>
+            TRUY XUẤT NGUỒN GỐC NÔNG SẢN OCOP
+        </h1>
+
+        <p>
+            “Giải pháp minh bạch cho sản phẩm Việt”
+        </p>
+
+    </section>
+
+
+    <!-- ================= TÌM KIẾM ================= -->
+
+    <section class="search-area">
+
+        <input
+            type="text"
+            id="searchInput"
+            class="search-box"
+            placeholder="Nhập tên sản phẩm hoặc mã truy xuất"
+        >
+
+        <button
+            class="btn btn-search"
+            onclick="timKiem()">
+            TÌM KIẾM
+        </button>
+
+        <button
+            class="btn btn-qr"
+            onclick="quetQR()">
+            QUÉT QR
+        </button>
+
+    </section>
+
+
+    <!-- ================= SẢN PHẨM ================= -->
+
+    <section class="products">
+
+
+        <!-- SẢN PHẨM 1 -->
+
+       <div class="product-card" onclick="xemChiTiet('cam-sanh')">
+
+            <img
+                src="images/cam-sanh.jpg"
+                alt="Cam sành Hà Giang">
+
+            <div class="product-info">
+
+                <div class="product-name">
+                    Cam sành Hà Giang
+                </div>
+
+                <div class="rating">
+                    <span class="star">☆☆☆☆☆</span>
+                    <b>OCOP 4 sao</b>
+                </div>
+
+                <div class="location">
+                    📍 Phú Thọ
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- SẢN PHẨM 2 -->
+
+        <div class="product-card" onclick="xemChiTiet('mat-ong')">
+
+            <img
+                src="images/mat-ong.jpg"
+                alt="Mật ong">
+
+            <div class="product-info">
+
+                <div class="product-name">
+                    Mật ong
+                </div>
+
+                <div class="rating">
+                    <span class="star">☆☆☆☆☆</span>
+                    <b>OCOP 4 sao</b>
+                </div>
+
+                <div class="location">
+                    📍 Thái Nguyên
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- SẢN PHẨM 3 -->
+
+        <div class="product-card" onclick="xemChiTiet('che-xanh')">
+
+            <img
+                src="images/che-xanh.jpg"
+                alt="Chè xanh">
+
+            <div class="product-info">
+
+                <div class="product-name">
+                    Chè xanh
+                </div>
+
+                <div class="rating">
+                    <span class="star">☆☆☆☆☆</span>
+                    <b>OCOP 4 sao</b>
+                </div>
+
+                <div class="location">
+                    📍 Hà Nội
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= FOOTER ================= -->
+
+    <footer>
+
+        <div class="footer-left">
+
+            <h3>
+                HỆ THỐNG TRUY XUẤT NGUỒN GỐC NÔNG SẢN OCOP
+            </h3>
+
+            <p>
+                © 2026 OCOP Traceability
+            </p>
+
+        </div>
+
+    </footer>
+
+
+    <!-- Kết nối JavaScript -->
+    <script src="js/main.js"></script>
+
+</body>
+
+</html>

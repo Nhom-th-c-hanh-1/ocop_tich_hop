@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quét QR - OCOP</title>
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/trace.css">
+
+    <style>
+        .photo-preview-section {
+            margin-top: 24px;
+            padding: 20px;
+            background: #f7fff2;
+            border: 1px solid #dfeeda;
+            border-radius: 15px;
+            text-align: center;
+        }
+        .photo-preview-section[hidden] { display: none !important; }
+        .photo-preview-section h2 { color: #087f5b; margin-top: 0; }
+        #photoPreview {
+            display: block;
+            width: 100%;
+            max-width: 620px;
+            max-height: 480px;
+            object-fit: contain;
+            margin: 12px auto;
+            border-radius: 10px;
+            background: #eee;
+        }
+        .photo-actions {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        #capturePhotoBtn:disabled { opacity: .5; cursor: not-allowed; }
+        .photo-note { color: #666; font-size: 13px; }
+        @media (max-width: 600px) {
+            .photo-preview-section { padding: 14px; }
+            .photo-actions { flex-direction: column; }
+            .photo-actions .trace-button { width: 100%; margin-top: 0; }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="trace-header">
+        <div class="logo">
+            <div class="logo-icon">🌿</div>
+            <div class="logo-text">
+                OC<br>
+                OP
+            </div>
+        </div>
+
+        <nav class="trace-nav">
+            <a href="index.html">TRANG CHỦ</a>
+            <a href="products.html">SẢN PHẨM</a>
+            <a href="trace-product.html">TRA CỨU</a>
+            <a href="scan-qr.html" class="active">QUÉT QR</a>
+        </nav>
+    </header>
+
+    <main class="qr-page">
+        <div class="trace-title">
+            <h1>QUÉT MÃ QR</h1>
+            <p>Quét mã QR trên sản phẩm OCOP để truy xuất nguồn gốc và thông tin sản phẩm.</p>
+        </div>
+
+        <section class="qr-section">
+            <div class="qr-camera">
+                <div class="camera-frame">
+                    <video id="qrVideo" autoplay playsinline muted></video>
+
+                    <div id="cameraPlaceholder">
+                        <div class="camera-icon">📷</div>
+                        <p>Camera chưa được bật</p>
+                    </div>
+
+                    <div class="scan-line"></div>
+                </div>
+
+                <button type="button" id="startCameraBtn" class="trace-button">
+                    BẮT ĐẦU QUÉT QR
+                </button>
+
+                <button type="button" id="stopCameraBtn" class="trace-button stop-button" style="display:none;">
+                    DỪNG CAMERA
+                </button>
+
+                <button type="button" id="capturePhotoBtn" class="trace-button" disabled>
+                    CHỤP ẢNH
+                </button>
+
+                <p id="cameraMessage" class="camera-message"></p>
+
+                <section id="photoPreviewSection" class="photo-preview-section" hidden>
+                    <h2>Ảnh vừa chụp</h2>
+                    <img id="photoPreview" alt="Ảnh vừa chụp từ camera">
+                    <div class="photo-actions">
+                        <button type="button" id="savePhotoBtn" class="trace-button">LƯU ẢNH VỀ MÁY</button>
+                        <button type="button" id="retakePhotoBtn" class="trace-button secondary-button">CHỤP LẠI</button>
+                    </div>
+                    <p class="photo-note">Ảnh được giữ trên màn hình này cho đến khi bạn tải lại hoặc đóng trang.</p>
+                </section>
+
+                <!-- Canvas riêng để chụp ảnh -->
+                <canvas id="photoCanvas" hidden></canvas>
+                <!-- Canvas riêng để đọc mã QR, không ảnh hưởng ảnh đã chụp -->
+                <canvas id="qrCanvas" hidden></canvas>
+            </div>
+        </section>
+
+        <section id="scannedQrResult" class="photo-preview-section" hidden aria-live="polite">
+            <h2>NỘI DUNG MÃ QR ĐÃ QUÉT</h2>
+            <p id="scannedQrText" style="overflow-wrap:anywhere;white-space:pre-wrap;"></p>
+            <a id="scannedQrLink" class="trace-button" href="#" target="_blank" rel="noopener noreferrer" hidden>
+                MỞ ĐƯỜNG LINK
+            </a>
+            <p class="photo-note">Chỉ mở đường link nếu bạn tin tưởng nguồn mã QR.</p>
+        </section>
+    </main>
+
+    <footer class="trace-footer">
+        <p>HỆ THỐNG TRUY XUẤT NGUỒN GỐC NÔNG SẢN OCOP</p>
+        <p>© 2026 OCOP Traceability</p>
+    </footer>
+
+    <!-- Thư viện đọc mã QR: chỉ cần nhúng một lần -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <script src="js/trace.js"></script>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const video = document.getElementById("qrVideo");
+        const startButton = document.getElementById("startCameraBtn");
+        const stopButton = document.getElementById("stopCameraBtn");
+        const captureButton = document.getElementById("capturePhotoBtn");
+        const message = document.getElementById("cameraMessage");
+        const placeholder = document.getElementById("cameraPlaceholder");
+
+        const photoCanvas = document.getElementById("photoCanvas");
+        const previewSection = document.getElementById("photoPreviewSection");
+        const preview = document.getElementById("photoPreview");
+        const saveButton = document.getElementById("savePhotoBtn");
+        const retakeButton = document.getElementById("retakePhotoBtn");
+
+        const qrCanvas = document.getElementById("qrCanvas");
+        const qrContext = qrCanvas.getContext("2d");
+        const resultSection = document.getElementById("scannedQrResult");
+        const resultText = document.getElementById("scannedQrText");
+        const resultLink = document.getElementById("scannedQrLink");
+
+        let photoData = "";
+        let cameraStream = null;
+        let isScanning = false;
+        let animationId = null;
+
+        function dungCamera() {
+            isScanning = false;
+
+            if (animationId !== null) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(function (track) {
+                    track.stop();
+                });
+                cameraStream = null;
+            }
+
+            video.srcObject = null;
+            captureButton.disabled = true;
+            startButton.style.display = "inline-block";
+            stopButton.style.display = "none";
+            placeholder.style.display = "block";
+        }
+
+        startButton.addEventListener("click", async function () {
+            try {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error("Trình duyệt không hỗ trợ camera hoặc trang chưa chạy bằng HTTPS/localhost.");
+                }
+
+                // Tránh mở camera nhiều lần
+                dungCamera();
+
+                resultSection.hidden = true;
+                resultText.textContent = "";
+                resultLink.hidden = true;
+                resultLink.removeAttribute("href");
+
+                cameraStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: { ideal: "environment" } },
+                    audio: false
+                });
+
+                video.srcObject = cameraStream;
+                await video.play();
+
+                isScanning = true;
+                placeholder.style.display = "none";
+                startButton.style.display = "none";
+                stopButton.style.display = "inline-block";
+                captureButton.disabled = false;
+
+                message.textContent = "Đang quét mã QR... Hãy đưa mã QR vào giữa khung hình.";
+                quetMaQR();
+            } catch (error) {
+                dungCamera();
+                message.textContent = "Không mở được camera. Hãy cấp quyền camera và chạy trang bằng HTTPS hoặc localhost.";
+                console.error("Lỗi camera:", error);
+            }
+        });
+
+        stopButton.addEventListener("click", function () {
+            dungCamera();
+            message.textContent = "Camera đã dừng.";
+        });
+
+        function quetMaQR() {
+            if (!isScanning) return;
+
+            if (video.readyState === video.HAVE_ENOUGH_DATA &&
+                video.videoWidth > 0 && video.videoHeight > 0) {
+
+                qrCanvas.width = video.videoWidth;
+                qrCanvas.height = video.videoHeight;
+                qrContext.drawImage(video, 0, 0, qrCanvas.width, qrCanvas.height);
+
+                if (typeof jsQR === "function") {
+                    const imageData = qrContext.getImageData(
+                        0, 0, qrCanvas.width, qrCanvas.height
+                    );
+
+                    const qr = jsQR(
+                        imageData.data,
+                        imageData.width,
+                        imageData.height
+                    );
+
+                    if (qr) {
+                        resultText.textContent = qr.data;
+                        resultSection.hidden = false;
+
+                        // Chỉ hiện nút mở nếu dữ liệu QR là URL HTTP/HTTPS hợp lệ
+                        try {
+                            const url = new URL(qr.data);
+                            if (url.protocol === "http:" || url.protocol === "https:") {
+                                resultLink.href = url.href;
+                                resultLink.hidden = false;
+                            } else {
+                                resultLink.hidden = true;
+                            }
+                        } catch (error) {
+                            resultLink.hidden = true;
+                        }
+
+                        dungCamera();
+                        message.textContent = "Quét thành công! Nội dung mã QR đã được hiển thị bên dưới.";
+                        resultSection.scrollIntoView({ behavior: "smooth", block: "nearest" });
+                        return;
+                    }
+                } else {
+                    dungCamera();
+                    message.textContent = "Chưa tải được thư viện quét QR. Hãy kiểm tra kết nối Internet.";
+                    return;
+                }
+            }
+
+            animationId = requestAnimationFrame(quetMaQR);
+        }
+
+        // Chụp ảnh từ camera đang bật
+        captureButton.addEventListener("click", function () {
+            if (!video.videoWidth || !video.videoHeight || !cameraStream) {
+                message.textContent = "Vui lòng bật camera trước khi chụp ảnh.";
+                return;
+            }
+
+            photoCanvas.width = video.videoWidth;
+            photoCanvas.height = video.videoHeight;
+
+            const photoContext = photoCanvas.getContext("2d");
+            photoContext.drawImage(video, 0, 0, photoCanvas.width, photoCanvas.height);
+
+            photoData = photoCanvas.toDataURL("image/jpeg", 0.92);
+            preview.src = photoData;
+            previewSection.hidden = false;
+            message.textContent = "Đã chụp ảnh. Bạn có thể lưu ảnh về máy hoặc chụp lại.";
+            previewSection.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        });
+
+        // Lưu ảnh về máy
+        saveButton.addEventListener("click", function () {
+            if (!photoData) {
+                message.textContent = "Bạn chưa chụp ảnh.";
+                return;
+            }
+
+            const downloadLink = document.createElement("a");
+            downloadLink.href = photoData;
+            downloadLink.download = "anh-ocop-" +
+                new Date().toISOString().replace(/[:.]/g, "-") + ".jpg";
+
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            downloadLink.remove();
+        });
+
+        // Xóa ảnh xem trước để chụp lại
+        retakeButton.addEventListener("click", function () {
+            photoData = "";
+            preview.removeAttribute("src");
+            previewSection.hidden = true;
+            message.textContent = cameraStream
+                ? "Bạn có thể chụp lại khi camera đang bật."
+                : "Hãy bật camera để chụp ảnh.";
+        });
+    });
+    </script>
+</body>
+</html>

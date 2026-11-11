@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý Cơ sở sản xuất - OCOP</title>
+    <!-- Dùng Bootstrap cho đẹp (nếu có mạng) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2>Quản lý Cơ sở sản xuất</h2>
+
+        <!-- Phần Form Thêm Mới -->
+        <div class="card mb-4">
+            <div class="card-header">Thêm Cơ sở mới</div>
+            <div class="card-body">
+                <form id="form-co-so">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label>Tên cơ sở (*)</label>
+                            <input type="text" class="form-control" id="ten_co_so" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label>Địa chỉ</label>
+                            <input type="text" class="form-control" id="dia_chi">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label>Số điện thoại</label>
+                            <input type="text" class="form-control" id="so_dien_thoai">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label>Giấy chứng nhận (VietGAP, OCOP...)</label>
+                            <input type="text" class="form-control" id="giay_chung_nhan">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Thêm Cơ sở</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Phần Bảng Danh Sách -->
+        <div class="card">
+            <div class="card-header">Danh sách Cơ sở sản xuất</div>
+            <div class="card-body">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Tên cơ sở</th>
+                            <th>Địa chỉ</th>
+                            <th>SĐT</th>
+                            <th>Chứng nhận</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-co-so">
+                        <!-- Dữ liệu từ JS sẽ đổ vào đây -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nhúng file JS vừa tạo -->
+    <script src="js/co-so.js"></script>
+</body>
+
+</html>
