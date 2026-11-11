@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -137,7 +136,8 @@
 </footer>
 
 <script>
-    const API_BASE = "http://localhost:3000/api/products/";
+    // Đã sửa lại dùng window.location.origin để tự đồng bộ giao thức và cổng với frontend
+    const API_BASE = window.location.origin + '/api/products/';
     const NO_DATA = "Chưa cập nhật";
 
     const imageMap = {
@@ -347,7 +347,6 @@
         }
 
         try {
-            // Dùng cùng khóa token với products.html
             const token = localStorage.getItem("ocopToken");
 
             const response = await fetch(API_BASE + encodeURIComponent(id), {
@@ -376,7 +375,6 @@
                 );
             }
 
-            // Hỗ trợ một số dạng phản hồi API phổ biến
             const product = result.data || result.product || result;
 
             if (
