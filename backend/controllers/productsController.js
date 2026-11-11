@@ -47,7 +47,14 @@ function validStars(value) {
 exports.getProducts = async (req, res) => {
     try {
         const [rows] = await db.query(
-            'SELECT * FROM san_pham_ocop ORDER BY MaSanPham DESC'
+            `SELECT
+                sp.*,
+                cs.TenCoSo,
+                cs.DiaChi AS DiaPhuong
+             FROM san_pham_ocop sp
+             LEFT JOIN co_so_san_xuat cs
+                ON sp.MaCoSo = cs.MaCoSo
+             ORDER BY sp.MaSanPham DESC`
         );
 
         return res.json({
@@ -64,7 +71,7 @@ exports.getProducts = async (req, res) => {
     }
 };
 
-// 2. Lấy chi tiết sản phẩm
+// 2. Lấy chi tiết sản phẩm kèm thông tin truy xuất nguồn gốc
 exports.getProductById = async (req, res) => {
     try {
         const { id } = req.params;
@@ -76,31 +83,109 @@ exports.getProductById = async (req, res) => {
             });
         }
 
-        const [rows] = await db.query(
-            'SELECT * FROM san_pham_ocop WHERE MaSanPham = ?',
+        // Bước 1: Lấy thông tin sản phẩm và cơ sở sản xuất
+        const [products] = await db.query(
+            `SELECT 
+                sp.*,
+                cs.TenCoSo,
+                cs.DiaChi AS DiaPhuong
+             FROM san_pham_ocop sp
+             LEFT JOIN co_so_san_xuat cs
+                ON sp.MaCoSo = cs.MaCoSo
+             WHERE sp.MaSanPham = ?`,
             [id]
         );
 
-        if (rows.length === 0) {
+        if (products.length === 0) {
             return res.status(404).json({
                 success: false,
                 message: 'Không tìm thấy sản phẩm.'
             });
         }
 
+        const product = products[0];
+
+        // Bước 2: Lấy lô sản xuất và vùng nguyên liệu
+        const [lots] = await db.query(
+            `SELECT
+                l.MaLo,
+                l.MaSoLo,
+                l.NgayThuHoach,
+                l.NgaySanXuat,
+                l.HanSuDung,
+                v.TenVung,
+                v.DiaChi AS DiaChiVung
+             FROM lo_san_xuat l
+             LEFT JOIN vung_nguyen_lieu v
+                ON l.MaVung = v.MaVung
+             WHERE l.MaSanPham = ?
+             ORDER BY l.NgaySanXuat DESC, l.MaLo DESC
+             LIMIT 1`,
+            [id]
+        );
+
+        const lot = lots.length > 0 ? lots[0] : null;
+
+        // Bước 3: Lấy quy trình sản xuất của lô
+        let processes = [];
+
+        if (lot) {
+            const [processRows] = await db.query(
+                `SELECT
+                    TenGiaiDoan,
+                    MoTa,
+                    NgayBatDau,
+                    NgayKetThuc,
+                    DiaDiem,
+                    HinhAnh
+                 FROM qua_trinh_san_xuat
+                 WHERE MaLo = ?
+                 ORDER BY MaQuaTrinh ASC`,
+                [lot.MaLo]
+            );
+
+            processes = processRows;
+        }
+
+        // Bước 4: Lấy chứng nhận của sản phẩm
+        const [certificates] = await db.query(
+            `SELECT
+                SoChungNhan,
+                TenChungNhan,
+                DonViCap,
+                NgayCap,
+                NgayHetHan,
+                TrangThai,
+                GhiChu,
+                TepChungNhan
+             FROM chung_nhan
+             WHERE MaSanPham = ?
+             ORDER BY MaChungNhan DESC`,
+            [id]
+        );
+
+        // Bước 5: Trả dữ liệu cho Frontend
         return res.json({
             success: true,
-            data: rows[0]
+            data: {
+                ...product,
+                LoSanXuat: lot,
+                QuaTrinh: processes,
+                ChungNhan: certificates
+            }
         });
+
     } catch (error) {
         console.error('Lỗi lấy chi tiết sản phẩm:', error);
 
         return res.status(500).json({
             success: false,
-            message: 'Không thể lấy chi tiết sản phẩm.'
+            message: 'Không thể lấy chi tiết sản phẩm.',
+            error: error.message
         });
     }
 };
+
 
 // 3. Thêm sản phẩm
 exports.createProduct = async (req, res) => {
